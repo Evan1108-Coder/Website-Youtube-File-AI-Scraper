@@ -1,0 +1,1 @@
+"""AI scraper bot package."""
