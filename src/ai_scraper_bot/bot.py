@@ -53,7 +53,7 @@ class ScraperBot(commands.Bot):
         self.semaphore = asyncio.Semaphore(settings.max_concurrent_jobs)
         self.summarizer = MiniMaxHTTPSummarizer(settings)
         self.transcription_service = TranscriptionService(settings)
-        self.vision_analyzer = LocalVisionAnalyzer(settings)
+        self.vision_analyzer = LocalVisionAnalyzer(settings, self.summarizer)
         self.music_analyzer = LocalMusicAnalyzer(settings)
         self.video_analyzer = LocalVideoAnalyzer(settings, self.vision_analyzer, self.summarizer)
         self.file_parser = FileParser(

@@ -23,5 +23,5 @@ PyNaCl
 playwright
 essentia
 torch==2.2.2
-transformers==4.57.6
+transformers==4.48.3
 timm

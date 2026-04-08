@@ -101,7 +101,7 @@ class LocalVideoAnalyzer:
                     if not extracted:
                         continue
                     description = await asyncio.wait_for(
-                        self.vision_analyzer.analyze_image_file(frame_path),
+                        self.vision_analyzer.analyze_image_file(frame_path, use_minimax=True),
                         timeout=30,
                     )
                     reviewed_media.append(f"Video frame at {_format_timecode(timestamp)}")
@@ -125,6 +125,8 @@ class LocalVideoAnalyzer:
                 "Video visual review:\n"
                 f"- Adaptive scan started at {base_interval}-second intervals.\n"
                 f"- Calm sections were allowed to stretch up to {max_interval} seconds between detailed reviews.\n"
+                "- When the scene stayed stable across repeated checks, the bot could widen the interval gradually instead of forcing the same spacing forever.\n"
+                "- Final frame descriptions were generated with MiniMax.\n"
                 "- Suspicious changes were revisited with denser local sampling.\n"
                 "Key frame notes:\n"
                 + "\n".join(lines)
@@ -152,7 +154,7 @@ class LocalVideoAnalyzer:
             visual_note = ""
             try:
                 visual_note = await asyncio.wait_for(
-                    self.vision_analyzer.analyze_image_file(frame.path),
+                    self.vision_analyzer.analyze_image_file(frame.path, use_minimax=False),
                     timeout=20,
                 )
             except Exception:
@@ -371,10 +373,10 @@ def _fallback_rule_plan(
             stable_streak += 1
             if stable_streak >= 2 and current_target < max_interval:
                 previous_target = current_target
-                current_target = min(float(max_interval), current_target + base_interval)
+                current_target = min(float(max_interval), current_target + 1.0)
                 if current_target != previous_target:
                     interval_events.append(
-                        f"Stable stretch through {_format_timecode(frame.timestamp_seconds)} widened the interval from {int(previous_target)} to {int(current_target)} seconds."
+                        f"Stable stretch through {_format_timecode(frame.timestamp_seconds)} widened the interval from {previous_target:g} to {current_target:g} seconds."
                     )
         else:
             stable_streak = 0
@@ -424,6 +426,7 @@ def _timestamps_from_ai_plan(
             start = _clamp_number(item.get("start_seconds"), 0.0, duration_seconds, 0.0)
             end = _clamp_number(item.get("end_seconds"), start, duration_seconds, start)
             interval = _clamp_number(item.get("interval_seconds"), float(base_interval), float(max_interval), float(base_interval))
+            interval = _snap_coverage_interval(interval, base_interval, max_interval)
             reason = str(item.get("reason") or "").strip()
             ordered.update(_expand_window(start, end, interval))
             if reason:
@@ -439,6 +442,7 @@ def _timestamps_from_ai_plan(
             start = _clamp_number(item.get("start_seconds"), 0.0, duration_seconds, 0.0)
             end = _clamp_number(item.get("end_seconds"), start, duration_seconds, start)
             interval = _clamp_number(item.get("interval_seconds"), 0.5, float(max_interval), max(1.0, base_interval / 2))
+            interval = _snap_focus_interval(interval, base_interval, max_interval)
             reason = str(item.get("reason") or "").strip()
             ordered.update(_expand_window(start, end, interval))
             if reason:
@@ -463,6 +467,20 @@ def _expand_window(start: float, end: float, interval: float) -> set[float]:
         current += max(0.5, interval)
     points.add(round(end, 2))
     return points
+
+
+def _snap_coverage_interval(interval: float, base_interval: int, max_interval: int) -> float:
+    snapped = round(interval)
+    snapped = max(base_interval, min(max_interval, snapped))
+    return float(snapped)
+
+
+def _snap_focus_interval(interval: float, base_interval: int, max_interval: int) -> float:
+    step = max(0.5, float(base_interval) / 2.0)
+    snapped = round(interval / step) * step
+    minimum = step
+    snapped = max(minimum, min(float(max_interval), snapped))
+    return round(snapped, 2)
 
 
 def _clamp_number(value: object, minimum: float, maximum: float, default: float) -> float:

@@ -17,6 +17,7 @@ class Settings:
     minimax_api_key: str
     minimax_api_url: str
     minimax_model: str
+    minimax_vision_model: str
     deepgram_api_key: str
     deepgram_model: str
     whisper_model: str
@@ -74,7 +75,8 @@ def load_settings() -> Settings:
         summarizer_provider=os.getenv("SUMMARIZER_PROVIDER", "minimax_http"),
         minimax_api_key=os.getenv("MINIMAX_API_KEY", ""),
         minimax_api_url=os.getenv("MINIMAX_API_URL", ""),
-        minimax_model=os.getenv("MINIMAX_MODEL", "M2.5"),
+        minimax_model=_normalize_minimax_model(os.getenv("MINIMAX_MODEL", "MiniMax-M2.5")),
+        minimax_vision_model=_normalize_minimax_model(os.getenv("MINIMAX_VISION_MODEL", "MiniMax-Text-01")),
         deepgram_api_key=os.getenv("DEEPGRAM_API_KEY", ""),
         deepgram_model=os.getenv("DEEPGRAM_MODEL", "nova-3"),
         whisper_model=os.getenv("WHISPER_MODEL", "base"),
@@ -143,6 +145,30 @@ def _env_bool(name: str, default: bool) -> bool:
     if raw is None:
         return default
     return raw.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _normalize_minimax_model(raw: str) -> str:
+    value = raw.strip() or "MiniMax-M2.5"
+    normalized = value.lower()
+    aliases = {
+        "m2.7": "MiniMax-M2.7",
+        "minimax-m2.7": "MiniMax-M2.7",
+        "m2.7-highspeed": "MiniMax-M2.7-highspeed",
+        "minimax-m2.7-highspeed": "MiniMax-M2.7-highspeed",
+        "m2.5": "MiniMax-M2.5",
+        "minimax-m2.5": "MiniMax-M2.5",
+        "m2.5-highspeed": "MiniMax-M2.5-highspeed",
+        "minimax-m2.5-highspeed": "MiniMax-M2.5-highspeed",
+        "m2.1": "MiniMax-M2.1",
+        "minimax-m2.1": "MiniMax-M2.1",
+        "m2.1-highspeed": "MiniMax-M2.1-highspeed",
+        "minimax-m2.1-highspeed": "MiniMax-M2.1-highspeed",
+        "m2": "MiniMax-M2",
+        "minimax-m2": "MiniMax-M2",
+        "text-01": "MiniMax-Text-01",
+        "minimax-text-01": "MiniMax-Text-01",
+    }
+    return aliases.get(normalized, value)
 
 
 def _resolve_downloads_dir() -> Path:

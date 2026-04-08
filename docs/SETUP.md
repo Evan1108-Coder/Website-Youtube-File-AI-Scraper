@@ -23,7 +23,7 @@ It can use:
 - Whisper for local transcription
 - Deepgram for long-file transcription if configured
 - Tesseract for OCR
-- local vision models for image/video understanding
+- MiniMax-based visual understanding for images and video frames
 - Playwright for transcript-site fallbacks
 - Essentia for local music features
 - optional AcoustID for song identification
@@ -554,23 +554,31 @@ Leave cookie mode off unless you deliberately want to enable it later.
 
 ---
 
-## 17. Set Up Local Vision
+## 17. Set Up Visual Analysis
 
-The default local vision settings are already in `.env.example`:
+The current active visual architecture is:
+
+- `MiniMax` for image descriptions
+- `MiniMax` for video key-frame descriptions
+
+The main switch is:
 
 ```env
 ENABLE_LOCAL_VISION=true
-VISION_CAPTION_MODEL=Salesforce/blip-image-captioning-base
-VISION_OBJECT_MODEL=facebook/detr-resnet-50
 ```
 
-This allows:
+What this means now:
 
-- image descriptions
-- simple object detection
-- support for local video frame review
+- image uploads can be visually described
+- website images can be visually described
+- video frame review can generate visual descriptions
+- the active description engine is `MiniMax`
 
-The first run may download local model weights. That can take time.
+Important:
+
+- the older env values `VISION_CAPTION_MODEL` and `VISION_OBJECT_MODEL` may still exist in config or `.env.example`
+- they are legacy compatibility settings now, not the main active visual-description path
+- you do not need to tune BLIP anymore for the normal visual workflow
 
 ---
 
@@ -978,6 +986,12 @@ YOUTUBE_TRANSCRIPT_WINDOW_SECONDS=150
 VIDEO_SCAN_BASE_INTERVAL_SECONDS=3
 VIDEO_SCAN_MAX_INTERVAL_SECONDS=25
 ```
+
+Notes about the visual lines above:
+
+- `ENABLE_LOCAL_VISION=true` is still the real switch for visual analysis
+- `VISION_CAPTION_MODEL` and `VISION_OBJECT_MODEL` are legacy compatibility settings
+- the active normal image/video description path now uses `MiniMax`
 
 ---
 

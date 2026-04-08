@@ -381,8 +381,20 @@ def _read_html_file(file_path: Path) -> str:
 
 
 def _read_xml_file(file_path: Path) -> str:
-    root = ET.fromstring(file_path.read_text("utf-8", errors="ignore"))
-    return "\n".join(element.text.strip() for element in root.iter() if element.text and element.text.strip())
+    raw_text = file_path.read_text("utf-8", errors="ignore")
+    try:
+        root = ET.fromstring(raw_text)
+        return "\n".join(element.text.strip() for element in root.iter() if element.text and element.text.strip())
+    except ET.ParseError:
+        soup = BeautifulSoup(raw_text, "html.parser")
+        recovered_text = soup.get_text("\n", strip=True)
+        if recovered_text:
+            return (
+                "Recovered text from malformed XML file. The XML structure was invalid, "
+                "but readable content was still extracted:\n\n"
+                f"{recovered_text}"
+            )
+        raise
 
 
 def _read_pdf(file_path: Path) -> str:

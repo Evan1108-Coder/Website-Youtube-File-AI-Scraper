@@ -344,7 +344,10 @@ class YouTubeService:
             return None
         requested = info.get("requested_subtitles") or info.get("subtitles") or {}
         for subtitle in requested.values():
-            for candidate in subtitle:
+            candidates = subtitle if isinstance(subtitle, list) else [subtitle]
+            for candidate in candidates:
+                if not isinstance(candidate, dict):
+                    continue
                 subtitle_url = candidate.get("url")
                 if subtitle_url:
                     return await self._download_text(subtitle_url)

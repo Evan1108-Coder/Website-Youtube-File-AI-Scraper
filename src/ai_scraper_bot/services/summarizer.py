@@ -26,6 +26,82 @@ class MiniMaxHTTPSummarizer:
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
 
+    async def describe_visual_input(
+        self,
+        *,
+        visual_input: VisualInput,
+        response_language: str = "english",
+        local_caption: str = "",
+        object_summary: str = "",
+        image_diagnostics: str = "",
+        retry_reason: str = "",
+    ) -> str:
+        if not self.settings.minimax_api_url or not self.settings.minimax_api_key:
+            return ""
+
+        hint_lines: list[str] = []
+        if local_caption.strip():
+            hint_lines.append(f"- Supporting caption hint: {local_caption.strip()}")
+        if object_summary.strip():
+            hint_lines.append(f"- Supporting object hint: {object_summary.strip()}")
+        if image_diagnostics.strip():
+            hint_lines.append(f"- Local image diagnostics: {image_diagnostics.strip()}")
+        if retry_reason.strip():
+            hint_lines.append(f"- Recheck reason: {retry_reason.strip()}")
+        hints = "\n".join(hint_lines) if hint_lines else "- No local hints were available."
+        prompt = (
+            f"Describe this image in {response_language}. "
+            "Be literal, conservative, and grounded only in what is directly visible. "
+            "Do not invent story details, relationships, events, intentions, identities, emotions, or off-frame context. "
+            "Do not claim the image is blank, black, empty, unreadable, or lacking visible detail unless that is clearly true. "
+            "Use the local hints only as hints to verify or correct, not as guaranteed facts.\n\n"
+            f"Local hints:\n{hints}\n\n"
+            "If you genuinely cannot see or interpret the image, return exactly: IMAGE_NOT_VISIBLE\n"
+            "Return exactly these four short lines and nothing else:\n"
+            "Main subject: ...\n"
+            "Setting/background: ...\n"
+            "Visible details: ...\n"
+            "Uncertainty: ...\n"
+            "If something is unclear, say uncertain instead of guessing."
+        )
+        content = _build_multimodal_content(prompt, [visual_input])
+        try:
+            return await self._complete(
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are a careful image description assistant. Be literal, concise, and do not speculate.",
+                    },
+                    {
+                        "role": "user",
+                        "content": content,
+                    },
+                ],
+                temperature=0.2,
+                model_name=self.settings.minimax_vision_model,
+            )
+        except Exception:
+            legacy_model = _legacy_minimax_vision_model(self.settings.minimax_vision_model)
+            if not legacy_model:
+                return ""
+            try:
+                return await self._complete(
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": "You are a careful image description assistant. Be literal, concise, and do not speculate.",
+                        },
+                        {
+                            "role": "user",
+                            "content": content,
+                        },
+                    ],
+                    temperature=0.2,
+                    model_name=legacy_model,
+                )
+            except Exception:
+                return ""
+
     async def analyze_source(
         self,
         title: str,
@@ -90,6 +166,7 @@ class MiniMaxHTTPSummarizer:
             ),
             temperature=analysis_temperature,
             had_visuals=bool(visual_inputs),
+            model_name=self.settings.minimax_vision_model if visual_inputs else self.settings.minimax_model,
         )
 
     async def chat(
@@ -134,6 +211,7 @@ class MiniMaxHTTPSummarizer:
             ),
             temperature=0.5,
             had_visuals=bool(visual_inputs),
+            model_name=self.settings.minimax_vision_model if visual_inputs else self.settings.minimax_model,
         )
 
     async def plan_video_review(
@@ -174,12 +252,17 @@ Return JSON only with this exact shape:
 Rules:
 - The bot starts from a base interval of {base_interval_seconds} seconds.
 - The maximum calm-section interval is {max_interval_seconds} seconds.
+- Coverage-plan intervals may widen gradually in small sensible steps when the video stays visually stable. For example, a base interval of 3 can later widen to 4, then 5, instead of only jumping in large rigid steps.
+- Focus-window intervals should stay sensible and small, but they do not need to follow rigid multiples if a slightly different value better fits the evidence.
 - Coverage plan should describe broader scanning windows across the video.
 - Focus windows are for places that deserve denser review and local rewind.
 - Keep coverage_plan to at most 10 windows.
 - Keep focus_windows to at most 12 windows.
 - Intervals must be positive and reasonable.
 - Prefer fewer, smarter windows over noisy micromanagement.
+- If transcript or audio guidance is weak, unavailable, or clearly unhelpful, rely more on visual novelty without pretending that strong audio guidance exists.
+- If transcript guidance is strong and the visuals mostly show a stable talking-head scene, widen intervals instead of reacting to ordinary face or body motion.
+- If the preview signals show repeated stability across several early checks, it is good to widen the interval progressively instead of staying stuck at the base interval forever.
 - JSON only. No markdown. No explanation outside JSON.
 
 Video duration seconds: {duration_seconds}
@@ -197,6 +280,7 @@ Preview signals:
                     {"role": "user", "content": prompt},
                 ],
                 temperature=0.2,
+                model_name=self.settings.minimax_model,
             )
         except SummarizerError:
             return None
@@ -209,21 +293,36 @@ Preview signals:
         fallback_text: str,
         temperature: float,
         had_visuals: bool,
+        model_name: str,
     ) -> str:
         try:
-            return await self._complete(messages=messages, temperature=temperature)
-        except SummarizerError as exc:
-            if not had_visuals or not _looks_like_multimodal_error(str(exc)):
+            return await self._complete(messages=messages, temperature=temperature, model_name=model_name)
+        except SummarizerError:
+            if not had_visuals:
                 raise
+            legacy_model = _legacy_minimax_vision_model(model_name)
+            if legacy_model:
+                try:
+                    return await self._complete(
+                        messages=messages,
+                        temperature=temperature,
+                        model_name=legacy_model,
+                    )
+                except SummarizerError:
+                    pass
             fallback_messages = [
                 messages[0],
                 {"role": "user", "content": fallback_text},
             ]
-            return await self._complete(messages=fallback_messages, temperature=temperature)
+            return await self._complete(
+                messages=fallback_messages,
+                temperature=temperature,
+                model_name=self.settings.minimax_model,
+            )
 
-    async def _complete(self, messages: list[dict[str, object]], temperature: float) -> str:
+    async def _complete(self, messages: list[dict[str, object]], temperature: float, model_name: str | None = None) -> str:
         payload = {
-            "model": self.settings.minimax_model,
+            "model": model_name or self.settings.minimax_model,
             "messages": messages,
             "temperature": temperature,
         }
@@ -295,22 +394,20 @@ def _extract_json_object(text: str) -> dict[str, object] | None:
         return None
 
 
-def _build_multimodal_content(text: str, visual_inputs: list[VisualInput]) -> str | list[dict[str, object]]:
+def _build_multimodal_content(text: str, visual_inputs: list[VisualInput]) -> str:
     if not visual_inputs:
         return text
 
-    parts: list[dict[str, object]] = [{"type": "text", "text": text}]
+    image_lines: list[str] = []
     for visual in visual_inputs[:4]:
         image_url = _visual_to_url(visual)
         if not image_url:
             continue
-        parts.append(
-            {
-                "type": "image_url",
-                "image_url": {"url": image_url},
-            }
-        )
-    return parts if len(parts) > 1 else text
+        label = visual.label.strip() or "image"
+        image_lines.append(f"![{label}]({image_url})")
+    if not image_lines:
+        return text
+    return f"{text}\n\nAttached image inputs:\n" + "\n".join(image_lines)
 
 
 def _visual_to_url(visual: VisualInput) -> str | None:
@@ -340,8 +437,22 @@ def _looks_like_multimodal_error(message: str) -> bool:
             "unsupported",
             "multimodal",
             "vision",
+            "content format",
+            "invalid content",
+            "does not support",
+            "not support image",
+            "invalid_request_error",
+            "content must be",
+            "invalid message format",
         )
     )
+
+
+def _legacy_minimax_vision_model(current_model: str) -> str | None:
+    normalized = current_model.strip().lower()
+    if normalized == "minimax-text-01":
+        return None
+    return "MiniMax-Text-01"
 
 
 def _prepare_source_body(body: str, user_request: str, max_chars: int = 120_000) -> str:

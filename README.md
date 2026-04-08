@@ -54,7 +54,7 @@ Supported types:
 ### Images
 
 - OCR with `Tesseract`
-- local visual analysis
+- MiniMax-based visual analysis
 - AVIF support through:
   - Pillow AVIF support when available
   - `ffmpeg` fallback decoding when needed
@@ -126,6 +126,18 @@ That means a silent video can still be reviewed visually, and a music-heavy audi
 
 The bot can use recent runtime diary lines from the running app process so it has better grounding when explaining failures.
 
+### 5. MiniMax-only visual descriptions
+
+The active image and video-frame description path now uses `MiniMax` as the visual description engine.
+
+That means:
+
+- image descriptions come from MiniMax
+- video key-frame descriptions come from MiniMax
+- the older BLIP captioning path is no longer part of the normal visual description flow
+
+This was changed to reduce inaccurate or noisy local captions.
+
 ## Main Project Files
 
 If you want to inspect the code, these are the most important files:
@@ -194,7 +206,7 @@ The current `.env.example` includes support for:
 - MiniMax endpoint and model
 - Deepgram
 - local Whisper
-- local vision
+- MiniMax visual analysis
 - local music detection
 - AcoustID
 - MIRFLEX repo hook
@@ -215,6 +227,12 @@ If you want the safest basic setup:
 - `YOUTUBE_DOWNSUB_ENABLED=true`
 - `YOUTUBE_SAVESUBS_ENABLED=true`
 - `YOUTUBE_TRANSCRIPT_SITE_HEADLESS=true`
+
+For the current visual architecture, keep in mind:
+
+- `ENABLE_LOCAL_VISION=true` means visual review is enabled
+- the active visual description engine is `MiniMax`
+- older env values like `VISION_CAPTION_MODEL` and `VISION_OBJECT_MODEL` may still exist in config for compatibility, but they are not the main active image-description path anymore
 
 ## Privacy and Sharing Notes
 
