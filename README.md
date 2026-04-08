@@ -9,6 +9,8 @@ This project is a Discord bot that can analyze and summarize:
 - audio files
 - video files
 
+I want this project to keep improving over time, so people are very welcome to explore it, remix it, fork it, and suggest better ideas. If you find weak spots, better libraries, cleaner architecture, or safer workflows, I genuinely want to hear those improvements.
+
 It is built around a layered extraction approach. Instead of depending on only one method, it tries the safest available path for each source type, keeps moving through fallbacks when possible, and now carries runtime notes into the final answer so the bot is less likely to guess or misrepresent what really happened.
 
 ## What It Can Do
