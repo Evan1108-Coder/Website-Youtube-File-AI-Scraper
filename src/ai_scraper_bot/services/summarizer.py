@@ -2,11 +2,14 @@ from __future__ import annotations
 
 import base64
 import json
+import logging
 import mimetypes
 from pathlib import Path
 import re
 
 import httpx
+
+logger = logging.getLogger(__name__)
 
 from ai_scraper_bot.models import VisualInput
 from ai_scraper_bot.config import Settings
@@ -80,7 +83,12 @@ class MiniMaxHTTPSummarizer:
                 temperature=0.2,
                 model_name=self.settings.minimax_vision_model,
             )
-        except Exception:
+        except Exception as exc:
+            logger.warning(
+                "MiniMax vision call failed with model %s: %s",
+                self.settings.minimax_vision_model,
+                exc,
+            )
             legacy_model = _legacy_minimax_vision_model(self.settings.minimax_vision_model)
             if not legacy_model:
                 return ""
@@ -99,7 +107,12 @@ class MiniMaxHTTPSummarizer:
                     temperature=0.2,
                     model_name=legacy_model,
                 )
-            except Exception:
+            except Exception as fallback_exc:
+                logger.warning(
+                    "MiniMax vision fallback also failed with model %s: %s",
+                    legacy_model,
+                    fallback_exc,
+                )
                 return ""
 
     async def analyze_source(
@@ -343,6 +356,17 @@ Preview signals:
             )
 
         data = response.json()
+
+        # Detect MiniMax API-level errors returned with HTTP 200.
+        base_resp = data.get("base_resp")
+        if isinstance(base_resp, dict):
+            api_code = base_resp.get("status_code")
+            if api_code is not None and api_code != 0:
+                api_msg = base_resp.get("status_msg", "Unknown MiniMax API error")
+                raise SummarizerError(
+                    f"MiniMax API error (code {api_code}): {api_msg}"
+                )
+
         content = _extract_message_content(data)
         if not content:
             raise SummarizerError("MiniMax returned an empty response.")
@@ -394,20 +418,28 @@ def _extract_json_object(text: str) -> dict[str, object] | None:
         return None
 
 
-def _build_multimodal_content(text: str, visual_inputs: list[VisualInput]) -> str:
+def _build_multimodal_content(
+    text: str, visual_inputs: list[VisualInput]
+) -> str | list[dict[str, object]]:
+    """Build OpenAI-compatible multimodal content.
+
+    Returns a plain string when there are no visuals, or a list of content
+    parts (text + image_url objects) when visuals are present.  This is the
+    format required by MiniMax's OpenAI-compatible chat-completion API.
+    """
     if not visual_inputs:
         return text
 
-    image_lines: list[str] = []
+    parts: list[dict[str, object]] = [{"type": "text", "text": text}]
     for visual in visual_inputs[:4]:
         image_url = _visual_to_url(visual)
         if not image_url:
             continue
-        label = visual.label.strip() or "image"
-        image_lines.append(f"![{label}]({image_url})")
-    if not image_lines:
-        return text
-    return f"{text}\n\nAttached image inputs:\n" + "\n".join(image_lines)
+        parts.append({
+            "type": "image_url",
+            "image_url": {"url": image_url},
+        })
+    return parts if len(parts) > 1 else text
 
 
 def _visual_to_url(visual: VisualInput) -> str | None:
