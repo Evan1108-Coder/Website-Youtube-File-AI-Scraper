@@ -12,7 +12,6 @@ OLD_DOWNLOADS_DIR_NAME = "Download Audios For AI"
 
 @dataclass(slots=True)
 class Settings:
-    discord_bot_token: str
     summarizer_provider: str
     minimax_api_key: str
     minimax_api_url: str
@@ -22,13 +21,9 @@ class Settings:
     deepgram_model: str
     whisper_model: str
     local_transcribe_max_minutes: int
-    bot_prefix: str
     max_concurrent_jobs: int
-    message_chunk_size: int
     downloads_dir: Path
-    temp_sweep_hours: int
     max_file_size_mb: int
-    reply_to_all_server_messages: bool
     enable_local_vision: bool
     vision_caption_model: str
     vision_object_model: str
@@ -71,7 +66,6 @@ def load_settings() -> Settings:
     load_dotenv()
     downloads_dir = _resolve_downloads_dir()
     return Settings(
-        discord_bot_token=os.getenv("DISCORD_BOT_TOKEN", ""),
         summarizer_provider=os.getenv("SUMMARIZER_PROVIDER", "minimax_http"),
         minimax_api_key=os.getenv("MINIMAX_API_KEY", ""),
         minimax_api_url=os.getenv("MINIMAX_API_URL", ""),
@@ -81,13 +75,9 @@ def load_settings() -> Settings:
         deepgram_model=os.getenv("DEEPGRAM_MODEL", "nova-3"),
         whisper_model=os.getenv("WHISPER_MODEL", "base"),
         local_transcribe_max_minutes=int(os.getenv("LOCAL_TRANSCRIBE_MAX_MINUTES", "15")),
-        bot_prefix=os.getenv("BOT_PREFIX", "!summarize"),
         max_concurrent_jobs=int(os.getenv("MAX_CONCURRENT_JOBS", "3")),
-        message_chunk_size=int(os.getenv("MESSAGE_CHUNK_SIZE", "1900")),
         downloads_dir=downloads_dir,
-        temp_sweep_hours=int(os.getenv("TEMP_SWEEP_HOURS", "6")),
         max_file_size_mb=int(os.getenv("MAX_FILE_SIZE_MB", "200")),
-        reply_to_all_server_messages=_env_bool("REPLY_TO_ALL_SERVER_MESSAGES", True),
         enable_local_vision=_env_bool("ENABLE_LOCAL_VISION", True),
         vision_caption_model=os.getenv(
             "VISION_CAPTION_MODEL",

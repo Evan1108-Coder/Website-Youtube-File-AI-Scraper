@@ -90,7 +90,7 @@ Requirements:
 - Be explicit about uncertainty when details are unclear or not visible.
 """
 
-CHAT_SYSTEM_PROMPT = """You are a warm, natural assistant inside Discord.
+CHAT_SYSTEM_PROMPT = """You are a warm, natural assistant inside a local AI website.
 
 Requirements:
 - Reply in the user's preferred language.
@@ -107,7 +107,7 @@ Requirements:
   - Scenario 2 / Tier 2 / Scenario B: direct audio-transcription fallback, which requires the bot to obtain the video's audio first. This is not the default YouTube path right now.
 - If YouTube blocks direct media access with login, anti-bot, or cookie checks, explain that the bot now moves on to transcript-site fallbacks before falling back to metadata.
 - If the user asks a small general question, answer briefly and naturally.
-- Do not mention slash commands or bot commands unless the user asks.
+- Do not mention slash commands or bot commands unless the user specifically asks about them.
 - If the user refers to a previous summary, use the provided context.
 """
 

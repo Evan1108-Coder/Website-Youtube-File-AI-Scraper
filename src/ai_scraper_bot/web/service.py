@@ -12,7 +12,7 @@ from uuid import uuid4
 
 from fastapi import UploadFile
 
-from ai_scraper_bot.bot import (
+from ai_scraper_bot.shared import (
     SUMMARY_TIMEOUT_SECONDS,
     WEBSITE_EXTRACT_TIMEOUT_SECONDS,
     _build_source_fallback_summary,
@@ -633,7 +633,7 @@ def _runtime_diary_for_source(source: JobSource, *, attachment_name: str | None 
     return get_recent_runtime_diary(
         limit=10,
         keywords=keywords,
-        logger_prefixes=("ai_scraper_bot", "discord.", "httpx"),
+        logger_prefixes=("ai_scraper_bot", "httpx"),
     )
 
 

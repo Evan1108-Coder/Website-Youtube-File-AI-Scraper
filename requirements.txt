@@ -1,4 +1,3 @@
-discord.py
 fastapi
 httpx
 yt-dlp
@@ -21,7 +20,6 @@ pillow-avif-plugin
 pytesseract
 python-dotenv
 python-multipart
-PyNaCl
 playwright
 essentia
 torch==2.2.2
