@@ -1,6 +1,6 @@
 # Detailed Setup Guide
 
-This guide is written for someone setting up the bot from scratch on macOS.
+This guide is written for someone setting up the project from scratch on macOS.
 
 It is intentionally step-by-step and detailed.
 
@@ -8,7 +8,14 @@ It is intentionally step-by-step and detailed.
 
 ## 1. What You Are Setting Up
 
-This project is a Discord bot that can summarize:
+This project can run as:
+
+- a Discord bot
+- a local website
+
+Both modes share the same AI extraction and summary pipeline.
+
+The project can summarize:
 
 - public websites
 - YouTube links
@@ -256,6 +263,14 @@ If Playwright browser support is needed for DownSub / SaveSubs, install Chromium
 playwright install chromium
 ```
 
+For the local website interface, the requirements file also installs:
+
+- `fastapi`
+- `uvicorn`
+- `python-multipart`
+
+Those are used for the web server, file uploads, and browser UI.
+
 ### If You Hit a NumPy / Whisper / torch Issue
 
 This project currently expects local Whisper to run with `numpy<2`.
@@ -296,6 +311,16 @@ open -e .env
 ```
 
 or edit it in VS Code.
+
+Optional website-only env vars:
+
+```env
+WEBAPP_HOST=127.0.0.1
+WEBAPP_PORT=8000
+WEBAPP_DB_PATH=./.webapp/webapp.sqlite
+```
+
+If you do not set them, the web app uses those defaults automatically.
 
 Important:
 
@@ -431,7 +456,39 @@ If you want to rely more on local Whisper:
 
 ---
 
-## 15. Optional: Set Up the YouTube Data API
+## 15. Run the Local Website
+
+From the project folder with `.venv` activated:
+
+```bash
+PYTHONPATH=src python -m ai_scraper_bot.webapp
+```
+
+Then open:
+
+```text
+http://127.0.0.1:8000
+```
+
+What you should see:
+
+- a left sidebar listing chats
+- a button to create a new chat
+- a dark chat-style UI
+- file upload support
+- normal AI chat plus file/link summarization in the same screen
+
+The website stores local chat history in:
+
+```text
+./.webapp/webapp.sqlite
+```
+
+unless you change `WEBAPP_DB_PATH`.
+
+---
+
+## 16. Optional: Set Up the YouTube Data API
 
 This is optional but recommended.
 
@@ -485,7 +542,7 @@ The bot can still fall back to simpler metadata lookup.
 
 ---
 
-## 16. Understand the Current YouTube Flow
+## 17. Understand the Current YouTube Flow
 
 The bot currently tries YouTube in this order:
 

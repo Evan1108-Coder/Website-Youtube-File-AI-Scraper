@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Website Scraper + Summarizer</title>
+    <link rel="stylesheet" href="/static/app.css?v=20260409j" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="sidebar__top">
+          <div>
+            <p class="eyebrow">Workspace</p>
+            <h1>AI Media Studio</h1>
+          </div>
+          <div class="sidebar__actions">
+            <button id="new-chat-button" class="ghost-button">+ New chat</button>
+            <button id="clear-chats-button" class="ghost-button ghost-button--danger">Clear Chats</button>
+          </div>
+        </div>
+        <div class="sidebar__meta">
+          <div class="meta-chip">
+            <span class="meta-chip__label">Mode</span>
+            <span class="meta-chip__value">Local Web App</span>
+          </div>
+          <div class="meta-chip" id="file-limit-chip">
+            <span class="meta-chip__label">Uploads</span>
+            <span class="meta-chip__value">Loading...</span>
+          </div>
+        </div>
+        <div id="chat-list" class="chat-list"></div>
+      </aside>
+
+      <main class="workspace">
+        <section class="hero-panel">
+          <div>
+            <p class="eyebrow">Multimodal assistant</p>
+            <h2>Chat, Upload, Summarize, and Inspect Media in One Place</h2>
+          </div>
+          <div class="hero-panel__side">
+            <button id="hide-banner-button" class="banner-toggle banner-toggle--hide" type="button">
+              Hide Banner
+            </button>
+            <div id="status-pill" class="status-pill">Ready</div>
+          </div>
+        </section>
+
+        <div id="banner-collapsed" class="banner-collapsed hidden">
+          <div class="banner-collapsed__line"></div>
+          <button id="show-banner-button" class="banner-toggle" type="button">Show Banner</button>
+        </div>
+
+        <section class="chat-panel">
+          <div class="chat-panel__frame">
+            <div class="chat-panel__header">
+              <div>
+                <p class="eyebrow">Current chat</p>
+                <h3 id="chat-title">Loading...</h3>
+              </div>
+              <p class="chat-panel__hint">
+                Send links, files, or normal questions. The AI keeps memory per chat.
+              </p>
+            </div>
+
+            <div id="message-list" class="message-list">
+              <div class="empty-state">
+                <div class="empty-state__orb"></div>
+                <h4>Start a new conversation</h4>
+                <p>
+                  Drop in a website, YouTube link, image, document, audio clip, or video file.
+                  You can also just talk to the AI normally.
+                </p>
+              </div>
+            </div>
+
+            <form id="composer-form" class="composer">
+              <div id="attachment-chip" class="attachment-chip hidden">
+                <span id="attachment-name"></span>
+                <button type="button" id="clear-attachment" class="attachment-chip__clear">
+                  Remove
+                </button>
+              </div>
+              <div class="composer__row">
+                <label class="upload-button" for="file-input">Attach file</label>
+                <input id="file-input" name="file" type="file" />
+                <textarea
+                  id="message-input"
+                  name="text"
+                  rows="1"
+                  placeholder="Ask anything, paste a link, or upload a file..."
+                ></textarea>
+                <button id="send-button" class="send-button" type="submit">Send</button>
+              </div>
+            </form>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div id="chat-menu" class="chat-menu hidden"></div>
+    <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+    <div id="modal-overlay" class="modal-overlay hidden">
+      <div class="modal-card">
+        <h4 id="modal-title">Confirm</h4>
+        <p id="modal-body">Are you sure?</p>
+        <div id="modal-input-wrap" class="modal-input-wrap hidden">
+          <input id="modal-input" class="modal-input" type="text" />
+        </div>
+        <div class="modal-actions">
+          <button id="modal-cancel" class="ghost-button" type="button">Cancel</button>
+          <button id="modal-confirm" class="send-button" type="button">Confirm</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="/static/app.js?v=20260409j" defer></script>
+  </body>
+</html>

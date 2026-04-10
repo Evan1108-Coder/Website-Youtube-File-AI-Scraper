@@ -1,6 +1,13 @@
 # AI Website Scraper + Summarizer V1.0 - MiniMax
 
-This project is a Discord bot that can analyze and summarize:
+This project can now run in two interfaces:
+
+- a Discord bot
+- a local website with a multi-chat sidebar, file uploads, and a normal AI chat screen
+
+Both interfaces use the same extraction and summarization services underneath.
+
+It can analyze and summarize:
 
 - websites
 - YouTube links
@@ -142,6 +149,15 @@ This was changed to reduce inaccurate or noisy local captions.
 
 If you want to inspect the code, these are the most important files:
 
+- local web app entrypoint:
+  - `src/ai_scraper_bot/webapp.py`
+- web backend:
+  - `src/ai_scraper_bot/web/service.py`
+  - `src/ai_scraper_bot/web/store.py`
+- web frontend:
+  - `src/ai_scraper_bot/web/static/index.html`
+  - `src/ai_scraper_bot/web/static/app.css`
+  - `src/ai_scraper_bot/web/static/app.js`
 - Discord bot logic:
   - `src/ai_scraper_bot/bot.py`
 - config and env loading:
@@ -184,9 +200,40 @@ At a high level, setup looks like this:
 8. create `.env` from `.env.example`
 9. fill in Discord + MiniMax settings
 10. optionally add YouTube Data API, Deepgram, AcoustID, and MIRFLEX settings
-11. run the bot
+11. run the website or the Discord bot
 
-## Starting the Bot
+## Starting the Website
+
+Once setup is complete:
+
+```bash
+cd "/path/to/AI Website Scraper + Summarizer V1.0 - MiniMax"
+source .venv/bin/activate
+PYTHONPATH=src python -m ai_scraper_bot.webapp
+```
+
+Then open:
+
+```text
+http://127.0.0.1:8000
+```
+
+Optional website env vars:
+
+- `WEBAPP_HOST`
+- `WEBAPP_PORT`
+- `WEBAPP_DB_PATH`
+
+The website includes:
+
+- a left sidebar for multiple chats
+- a new-chat button
+- local persistent chat history via SQLite
+- file uploads
+- link + file summarization
+- normal AI chat in the same workspace
+
+## Starting the Discord Bot
 
 Once setup is complete:
 
