@@ -1,5 +1,6 @@
 fastapi
 httpx
+litellm
 yt-dlp
 youtube-transcript-api
 numpy<2

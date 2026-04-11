@@ -10,14 +10,14 @@ from statistics import mean
 from PIL import ImageStat
 from ai_scraper_bot.config import Settings
 from ai_scraper_bot.models import VisualInput
-from ai_scraper_bot.services.summarizer import MiniMaxHTTPSummarizer
+from ai_scraper_bot.services.summarizer import LiteLLMSummarizer
 from ai_scraper_bot.utils.image_loading import load_image_with_fallback
 
 logger = logging.getLogger(__name__)
 
 
 class LocalVisionAnalyzer:
-    def __init__(self, settings: Settings, summarizer: MiniMaxHTTPSummarizer | None = None) -> None:
+    def __init__(self, settings: Settings, summarizer: LiteLLMSummarizer | None = None) -> None:
         self.settings = settings
         self.summarizer = summarizer
 

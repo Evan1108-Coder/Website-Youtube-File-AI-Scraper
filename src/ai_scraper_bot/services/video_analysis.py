@@ -9,7 +9,7 @@ from tempfile import TemporaryDirectory
 from PIL import Image, ImageChops, ImageStat
 
 from ai_scraper_bot.config import Settings
-from ai_scraper_bot.services.summarizer import MiniMaxHTTPSummarizer
+from ai_scraper_bot.services.summarizer import LiteLLMSummarizer
 from ai_scraper_bot.services.vision import LocalVisionAnalyzer
 
 
@@ -33,7 +33,7 @@ class LocalVideoAnalyzer:
         self,
         settings: Settings,
         vision_analyzer: LocalVisionAnalyzer | None,
-        summarizer: MiniMaxHTTPSummarizer | None = None,
+        summarizer: LiteLLMSummarizer | None = None,
     ) -> None:
         self.settings = settings
         self.vision_analyzer = vision_analyzer

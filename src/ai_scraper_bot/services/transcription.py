@@ -8,6 +8,7 @@ import tempfile
 from pathlib import Path
 
 import httpx
+import litellm
 import numpy as np
 
 from ai_scraper_bot.config import Settings
@@ -24,6 +25,9 @@ class TranscriptionService:
         self._whisper_module = None
 
     async def transcribe_media(self, media_path: Path, duration_minutes: float | None = None) -> str:
+        model = self.settings.transcription_model
+        if model and model != "local":
+            return await self._transcribe_with_litellm(media_path, model)
         if duration_minutes is not None and duration_minutes > self.settings.local_transcribe_max_minutes:
             if self.settings.deepgram_api_key:
                 return await self._transcribe_with_deepgram(media_path)
@@ -190,6 +194,20 @@ class TranscriptionService:
         if not isinstance(streams, list):
             return None
         return bool(streams)
+
+    async def _transcribe_with_litellm(self, media_path: Path, model: str) -> str:
+        try:
+            response = await litellm.atranscription(
+                model=model,
+                file=media_path,
+                timeout=300.0,
+            )
+        except Exception as exc:
+            raise TranscriptionError(f"Transcription failed ({model}): {exc}") from exc
+        text = response.text.strip() if hasattr(response, "text") else ""
+        if not text:
+            raise TranscriptionError(f"Transcription returned no text ({model}).")
+        return text
 
     async def _transcribe_with_deepgram(self, media_path: Path) -> str:
         if not self.settings.deepgram_api_key:

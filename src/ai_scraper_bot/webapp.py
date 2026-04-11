@@ -56,7 +56,8 @@ async def index() -> FileResponse:
 async def health() -> dict[str, object]:
     return {
         "ok": True,
-        "minimax_configured": bool(SETTINGS.minimax_api_key and SETTINGS.minimax_api_url),
+        "llm_configured": bool(SETTINGS.llm_model),
+        "llm_model": SETTINGS.llm_model,
         "downloads_dir": str(SETTINGS.downloads_dir),
     }
 

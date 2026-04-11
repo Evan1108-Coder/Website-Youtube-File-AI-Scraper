@@ -9,10 +9,44 @@ from dotenv import load_dotenv
 NEW_DOWNLOADS_DIR_NAME = "Download Audio File For AI"
 OLD_DOWNLOADS_DIR_NAME = "Download Audios For AI"
 
+MODEL_ALIASES: dict[str, str] = {
+    # OpenAI
+    "gpt-5.4-pro": "gpt-5.4-pro",
+    "gpt-5.4-mini": "gpt-5.4-mini",
+    "gpt-4o": "gpt-4o",
+    "gpt-4o-mini": "gpt-4o-mini",
+    # Anthropic
+    "claude-opus-4-6": "anthropic/claude-opus-4-6",
+    "claude-sonnet-4-6": "anthropic/claude-sonnet-4-6",
+    "claude-haiku-4-5": "anthropic/claude-haiku-4-5",
+    "claude-3.5-sonnet": "anthropic/claude-3-5-sonnet-20241022",
+    # Google Gemini
+    "gemini-3.1-pro": "gemini/gemini-3.1-pro",
+    "gemini-3-flash": "gemini/gemini-3.0-flash",
+    "gemini-2.5-flash-lite": "gemini/gemini-2.5-flash-lite",
+    # Llama (via Together AI)
+    "llama-4-maverick": "together_ai/meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8",
+    "llama-4-scout": "together_ai/meta-llama/Llama-4-Scout-17B-16E-Instruct",
+    "llama-3.3-70b": "together_ai/meta-llama/Llama-3.3-70B-Instruct-Turbo",
+    # MiniMax
+    "minimax-m2.7": "minimax/MiniMax-M2.7",
+    "minimax-m2.5-lightning": "minimax/MiniMax-M2.5-lightning",
+}
+
+TRANSCRIPTION_MODEL_ALIASES: dict[str, str] = {
+    "whisper-1": "whisper-1",
+    "deepgram/nova-3": "deepgram/nova-3",
+    "deepgram/nova-2": "deepgram/nova-2",
+    "deepgram/whisper-large": "deepgram/whisper-large",
+}
+
 
 @dataclass(slots=True)
 class Settings:
     summarizer_provider: str
+    llm_model: str
+    llm_vision_model: str
+    transcription_model: str
     minimax_api_key: str
     minimax_api_url: str
     minimax_model: str
@@ -65,12 +99,30 @@ class Settings:
 def load_settings() -> Settings:
     load_dotenv()
     downloads_dir = _resolve_downloads_dir()
+
+    minimax_model = _normalize_minimax_model(os.getenv("MINIMAX_MODEL", "MiniMax-M2.5"))
+    minimax_vision_model = _normalize_minimax_model(os.getenv("MINIMAX_VISION_MODEL", "MiniMax-Text-01"))
+
+    llm_model = _resolve_model(
+        os.getenv("LLM_MODEL", "").strip() or minimax_model
+    )
+    llm_vision_model = _resolve_model(
+        os.getenv("LLM_VISION_MODEL", "").strip() or minimax_vision_model
+    )
+
+    transcription_model = _resolve_transcription_model(
+        os.getenv("TRANSCRIPTION_MODEL", "").strip()
+    )
+
     return Settings(
         summarizer_provider=os.getenv("SUMMARIZER_PROVIDER", "minimax_http"),
+        llm_model=llm_model,
+        llm_vision_model=llm_vision_model,
+        transcription_model=transcription_model,
         minimax_api_key=os.getenv("MINIMAX_API_KEY", ""),
         minimax_api_url=os.getenv("MINIMAX_API_URL", ""),
-        minimax_model=_normalize_minimax_model(os.getenv("MINIMAX_MODEL", "MiniMax-M2.5")),
-        minimax_vision_model=_normalize_minimax_model(os.getenv("MINIMAX_VISION_MODEL", "MiniMax-Text-01")),
+        minimax_model=minimax_model,
+        minimax_vision_model=minimax_vision_model,
         deepgram_api_key=os.getenv("DEEPGRAM_API_KEY", ""),
         deepgram_model=os.getenv("DEEPGRAM_MODEL", "nova-3"),
         whisper_model=os.getenv("WHISPER_MODEL", "base"),
@@ -159,6 +211,32 @@ def _normalize_minimax_model(raw: str) -> str:
         "minimax-text-01": "MiniMax-Text-01",
     }
     return aliases.get(normalized, value)
+
+
+def _resolve_model(raw: str) -> str:
+    value = raw.strip()
+    if not value:
+        return "minimax/MiniMax-M2.5"
+    lowered = value.lower()
+    if lowered in MODEL_ALIASES:
+        return MODEL_ALIASES[lowered]
+    if "/" in value:
+        return value
+    if value.startswith("MiniMax") or value.startswith("minimax"):
+        return f"minimax/{value}"
+    return value
+
+
+def _resolve_transcription_model(raw: str) -> str:
+    value = raw.strip()
+    if not value:
+        return "local"
+    lowered = value.lower()
+    if lowered in {"local", "whisper"}:
+        return "local"
+    if lowered in TRANSCRIPTION_MODEL_ALIASES:
+        return TRANSCRIPTION_MODEL_ALIASES[lowered]
+    return value
 
 
 def _resolve_downloads_dir() -> Path:
