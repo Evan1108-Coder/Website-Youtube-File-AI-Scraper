@@ -7,7 +7,7 @@ import mimetypes
 from pathlib import Path
 import re
 
-import httpx
+import litellm
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +25,10 @@ class SummarizerError(RuntimeError):
     pass
 
 
-class MiniMaxHTTPSummarizer:
+MiniMaxHTTPSummarizer = None  # removed; use LiteLLMSummarizer
+
+
+class LiteLLMSummarizer:
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
 
@@ -39,7 +42,7 @@ class MiniMaxHTTPSummarizer:
         image_diagnostics: str = "",
         retry_reason: str = "",
     ) -> str:
-        if not self.settings.minimax_api_url or not self.settings.minimax_api_key:
+        if not self.settings.llm_vision_model:
             return ""
 
         hint_lines: list[str] = []
@@ -81,16 +84,15 @@ class MiniMaxHTTPSummarizer:
                     },
                 ],
                 temperature=0.2,
-                model_name=self.settings.minimax_vision_model,
+                model_name=self.settings.llm_vision_model,
             )
         except Exception as exc:
             logger.warning(
-                "MiniMax vision call failed with model %s: %s",
-                self.settings.minimax_vision_model,
+                "Vision call failed with model %s: %s",
+                self.settings.llm_vision_model,
                 exc,
             )
-            legacy_model = _legacy_minimax_vision_model(self.settings.minimax_vision_model)
-            if not legacy_model:
+            if self.settings.llm_vision_model == self.settings.llm_model:
                 return ""
             try:
                 return await self._complete(
@@ -105,12 +107,12 @@ class MiniMaxHTTPSummarizer:
                         },
                     ],
                     temperature=0.2,
-                    model_name=legacy_model,
+                    model_name=self.settings.llm_model,
                 )
             except Exception as fallback_exc:
                 logger.warning(
-                    "MiniMax vision fallback also failed with model %s: %s",
-                    legacy_model,
+                    "Vision fallback also failed with model %s: %s",
+                    self.settings.llm_model,
                     fallback_exc,
                 )
                 return ""
@@ -131,9 +133,9 @@ class MiniMaxHTTPSummarizer:
         video_interval_history: list[str] | None = None,
         related_urls: list[str] | None = None,
     ) -> str:
-        if not self.settings.minimax_api_url or not self.settings.minimax_api_key:
+        if not self.settings.llm_model:
             raise SummarizerError(
-                "MiniMax is not configured yet. Set MINIMAX_API_URL and MINIMAX_API_KEY in .env."
+                "No LLM model configured. Set LLM_MODEL in .env (e.g. gpt-4o, claude-sonnet-4-6)."
             )
 
         analysis_temperature = _analysis_temperature(metadata)
@@ -179,7 +181,7 @@ class MiniMaxHTTPSummarizer:
             ),
             temperature=analysis_temperature,
             had_visuals=bool(visual_inputs),
-            model_name=self.settings.minimax_vision_model if visual_inputs else self.settings.minimax_model,
+            model_name=self.settings.llm_vision_model if visual_inputs else self.settings.llm_model,
         )
 
     async def chat(
@@ -191,9 +193,9 @@ class MiniMaxHTTPSummarizer:
         runtime_diary: list[str] | None = None,
         quoted_input_mode: bool = False,
     ) -> str:
-        if not self.settings.minimax_api_url or not self.settings.minimax_api_key:
+        if not self.settings.llm_model:
             raise SummarizerError(
-                "MiniMax is not configured yet. Set MINIMAX_API_URL and MINIMAX_API_KEY in .env."
+                "No LLM model configured. Set LLM_MODEL in .env (e.g. gpt-4o, claude-sonnet-4-6)."
             )
 
         content = _build_multimodal_content(
@@ -224,7 +226,7 @@ class MiniMaxHTTPSummarizer:
             ),
             temperature=0.5,
             had_visuals=bool(visual_inputs),
-            model_name=self.settings.minimax_vision_model if visual_inputs else self.settings.minimax_model,
+            model_name=self.settings.llm_vision_model if visual_inputs else self.settings.llm_model,
         )
 
     async def plan_video_review(
@@ -236,7 +238,7 @@ class MiniMaxHTTPSummarizer:
         transcript_text: str,
         preview_signals: list[dict[str, object]],
     ) -> dict[str, object] | None:
-        if not self.settings.minimax_api_url or not self.settings.minimax_api_key:
+        if not self.settings.llm_model:
             return None
 
         transcript_excerpt = transcript_text[:12000].strip() or "No transcript text available."
@@ -293,7 +295,7 @@ Preview signals:
                     {"role": "user", "content": prompt},
                 ],
                 temperature=0.2,
-                model_name=self.settings.minimax_model,
+                model_name=self.settings.llm_model,
             )
         except SummarizerError:
             return None
@@ -313,13 +315,12 @@ Preview signals:
         except SummarizerError:
             if not had_visuals:
                 raise
-            legacy_model = _legacy_minimax_vision_model(model_name)
-            if legacy_model:
+            if model_name != self.settings.llm_model:
                 try:
                     return await self._complete(
                         messages=messages,
                         temperature=temperature,
-                        model_name=legacy_model,
+                        model_name=self.settings.llm_model,
                     )
                 except SummarizerError:
                     pass
@@ -330,67 +331,43 @@ Preview signals:
             return await self._complete(
                 messages=fallback_messages,
                 temperature=temperature,
-                model_name=self.settings.minimax_model,
+                model_name=self.settings.llm_model,
             )
 
     async def _complete(self, messages: list[dict[str, object]], temperature: float, model_name: str | None = None) -> str:
-        payload = {
-            "model": model_name or self.settings.minimax_model,
+        model = model_name or self.settings.llm_model
+        kwargs: dict[str, object] = {
+            "model": model,
             "messages": messages,
             "temperature": temperature,
+            "timeout": 120.0,
         }
-        headers = {
-            "Authorization": f"Bearer {self.settings.minimax_api_key}",
-            "Content-Type": "application/json",
-        }
-        async with httpx.AsyncClient(timeout=httpx.Timeout(120.0)) as client:
-            response = await client.post(
-                self.settings.minimax_api_url,
-                headers=headers,
-                content=json.dumps(payload),
-            )
 
-        if response.status_code >= 400:
-            raise SummarizerError(
-                f"MiniMax request failed with status {response.status_code}: {response.text[:400]}"
-            )
+        if model.startswith("minimax/"):
+            if self.settings.minimax_api_key:
+                kwargs["api_key"] = self.settings.minimax_api_key
+            if self.settings.minimax_api_url:
+                base = self.settings.minimax_api_url
+                for suffix in ("/chat/completions", "/text/chatcompletion", "/text/chatcompletion_v2"):
+                    if base.endswith(suffix):
+                        base = base[: -len(suffix)]
+                        break
+                kwargs["api_base"] = base.rstrip("/")
+                kwargs["model"] = f"openai/{model.removeprefix('minimax/')}"
 
-        data = response.json()
+        try:
+            response = await litellm.acompletion(**kwargs)  # type: ignore[arg-type]
+        except Exception as exc:
+            raise SummarizerError(f"LLM request failed ({model}): {exc}") from exc
 
-        # Detect MiniMax API-level errors returned with HTTP 200.
-        base_resp = data.get("base_resp")
-        if isinstance(base_resp, dict):
-            api_code = base_resp.get("status_code")
-            if api_code is not None and api_code != 0:
-                api_msg = base_resp.get("status_msg", "Unknown MiniMax API error")
-                raise SummarizerError(
-                    f"MiniMax API error (code {api_code}): {api_msg}"
-                )
-
-        content = _extract_message_content(data)
+        content = response.choices[0].message.content or ""
         if not content:
-            raise SummarizerError("MiniMax returned an empty response.")
+            raise SummarizerError(f"LLM returned an empty response ({model}).")
         cleaned = _sanitize_model_output(content)
         if not cleaned:
-            raise SummarizerError("MiniMax returned empty visible content after cleanup.")
+            raise SummarizerError(f"LLM returned empty visible content after cleanup ({model}).")
         return cleaned
 
-
-def _extract_message_content(data: dict) -> str:
-    if isinstance(data.get("choices"), list) and data["choices"]:
-        message = data["choices"][0].get("message", {})
-        content = message.get("content")
-        if isinstance(content, str):
-            return content
-        if isinstance(content, list):
-            return "\n".join(
-                part.get("text", "") for part in content if isinstance(part, dict)
-            )
-    if isinstance(data.get("reply"), str):
-        return data["reply"]
-    if isinstance(data.get("output_text"), str):
-        return data["output_text"]
-    return ""
 
 
 def _sanitize_model_output(text: str) -> str:
@@ -425,7 +402,7 @@ def _build_multimodal_content(
 
     Returns a plain string when there are no visuals, or a list of content
     parts (text + image_url objects) when visuals are present.  This is the
-    format required by MiniMax's OpenAI-compatible chat-completion API.
+    standard format used by LiteLLM across all providers.
     """
     if not visual_inputs:
         return text
@@ -479,12 +456,6 @@ def _looks_like_multimodal_error(message: str) -> bool:
         )
     )
 
-
-def _legacy_minimax_vision_model(current_model: str) -> str | None:
-    normalized = current_model.strip().lower()
-    if normalized == "minimax-text-01":
-        return None
-    return "MiniMax-Text-01"
 
 
 def _prepare_source_body(body: str, user_request: str, max_chars: int = 120_000) -> str:

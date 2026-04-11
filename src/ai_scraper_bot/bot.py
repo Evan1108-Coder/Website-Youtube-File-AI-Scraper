@@ -18,7 +18,7 @@ from ai_scraper_bot.config import Settings
 from ai_scraper_bot.models import JobSource
 from ai_scraper_bot.parsers.file_parser import AUDIO_TYPES, SUPPORTED_FILE_TYPES, VIDEO_TYPES, FileParser
 from ai_scraper_bot.services.music_analysis import LocalMusicAnalyzer
-from ai_scraper_bot.services.summarizer import MiniMaxHTTPSummarizer
+from ai_scraper_bot.services.summarizer import LiteLLMSummarizer
 from ai_scraper_bot.services.transcription import TranscriptionService
 from ai_scraper_bot.services.video_analysis import LocalVideoAnalyzer
 from ai_scraper_bot.services.vision import LocalVisionAnalyzer
@@ -51,7 +51,7 @@ class ScraperBot(commands.Bot):
         super().__init__(command_prefix="", intents=intents)
         self.settings = settings
         self.semaphore = asyncio.Semaphore(settings.max_concurrent_jobs)
-        self.summarizer = MiniMaxHTTPSummarizer(settings)
+        self.summarizer = LiteLLMSummarizer(settings)
         self.transcription_service = TranscriptionService(settings)
         self.vision_analyzer = LocalVisionAnalyzer(settings, self.summarizer)
         self.music_analyzer = LocalMusicAnalyzer(settings)
