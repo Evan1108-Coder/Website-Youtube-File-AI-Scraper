@@ -20,6 +20,14 @@ You are setting up a local website that can:
 - inspect video
 - keep local chat history in SQLite
 
+It uses [LiteLLM](https://docs.litellm.ai/) to support multiple AI providers:
+
+- **OpenAI** (GPT-5.4, GPT-4o, etc.)
+- **Anthropic** (Claude Opus, Sonnet, Haiku)
+- **Google Gemini** (Gemini 3.1 Pro, 3 Flash, etc.)
+- **Together AI** (Llama 4, Llama 3.3, etc.)
+- **MiniMax** (M2.7, M2.5 Lightning)
+
 The website uses the same shared extraction engine underneath as the Discord version.
 
 ## 2. What You Need
@@ -29,12 +37,12 @@ Required:
 - a Mac with Terminal access
 - internet access
 - permission to install packages with Homebrew and `pip`
-- a MiniMax API key and endpoint
+- an API key from your chosen AI provider (OpenAI, Anthropic, Google, Together AI, or MiniMax)
 
 Optional but recommended:
 
 - a YouTube Data API key
-- a Deepgram API key
+- a cloud audio transcription API key (OpenAI or Deepgram)
 - an AcoustID API key
 - a local MIRFLEX repo if you want to experiment with that path
 
@@ -161,7 +169,7 @@ brew install rust
 ## 6. Go Into the Project Folder
 
 ```bash
-cd "/path/to/AI Website Scraper + Summarizer V1.0 - MiniMax"
+cd "/path/to/project"
 ```
 
 Check:
@@ -269,34 +277,79 @@ Important:
 At minimum, set these:
 
 ```env
-SUMMARIZER_PROVIDER=minimax_http
-MINIMAX_API_KEY=your_real_minimax_key
-MINIMAX_API_URL=your_real_minimax_endpoint
-MINIMAX_MODEL=MiniMax-M2.5
-MINIMAX_VISION_MODEL=MiniMax-Text-01
+TEXT_AI_MODEL=your_chosen_model
+TEXT_AI_API_KEY=your_api_key
+```
+
+### Supported Models
+
+| Model | Provider | Where to get a key |
+|---|---|---|
+| `gpt-5.4-pro` | OpenAI | https://platform.openai.com/api-keys |
+| `gpt-5.4-mini` | OpenAI | https://platform.openai.com/api-keys |
+| `gpt-4o` | OpenAI | https://platform.openai.com/api-keys |
+| `gpt-4o-mini` | OpenAI | https://platform.openai.com/api-keys |
+| `claude-opus-4-6` | Anthropic | https://console.anthropic.com/ |
+| `claude-sonnet-4-6` | Anthropic | https://console.anthropic.com/ |
+| `claude-haiku-4-5` | Anthropic | https://console.anthropic.com/ |
+| `claude-3.5-sonnet` | Anthropic | https://console.anthropic.com/ |
+| `gemini-3.1-pro` | Google | https://aistudio.google.com/apikey |
+| `gemini-3-flash` | Google | https://aistudio.google.com/apikey |
+| `gemini-2.5-flash-lite` | Google | https://aistudio.google.com/apikey |
+| `llama-4-maverick` | Together AI | https://api.together.xyz/ |
+| `llama-4-scout` | Together AI | https://api.together.xyz/ |
+| `llama-3.3-70b` | Together AI | https://api.together.xyz/ |
+| `minimax-m2.7` | MiniMax | MiniMax dashboard |
+| `minimax-m2.5-lightning` | MiniMax | MiniMax dashboard |
+
+The system auto-detects which provider you are using based on the model name and sets the correct API key environment variable for LiteLLM.
+
+### Example Configurations
+
+For OpenAI:
+
+```env
+TEXT_AI_MODEL=gpt-4o
+TEXT_AI_API_KEY=sk-proj-your_real_openai_key
+```
+
+For Anthropic:
+
+```env
+TEXT_AI_MODEL=claude-sonnet-4-6
+TEXT_AI_API_KEY=sk-ant-your_real_anthropic_key
+```
+
+For Google Gemini:
+
+```env
+TEXT_AI_MODEL=gemini-3-flash
+TEXT_AI_API_KEY=your_real_gemini_key
+```
+
+### MiniMax Special Case
+
+If you use a MiniMax model, you also need `MINIMAX_API_URL`:
+
+```env
+TEXT_AI_MODEL=minimax-m2.7
+TEXT_AI_API_KEY=your_real_minimax_key
+MINIMAX_API_URL=https://your_real_minimax_chat_endpoint
+```
+
+### Legacy MiniMax Variables
+
+If you are migrating from the original MiniMax-only version, your old variables (`MINIMAX_API_KEY`, `MINIMAX_MODEL`, etc.) still work as a fallback. But it is recommended to switch to the new `TEXT_AI_MODEL` + `TEXT_AI_API_KEY` format.
+
+### Website Server Settings
+
+Optional — defaults are fine for local use:
+
+```env
 WEBAPP_HOST=127.0.0.1
 WEBAPP_PORT=8000
 WEBAPP_DB_PATH=./.webapp/webapp.sqlite
 ```
-
-What these mean:
-
-- `SUMMARIZER_PROVIDER`
-  - tells the app to use the MiniMax HTTP summarizer
-- `MINIMAX_API_KEY`
-  - your real MiniMax API key
-- `MINIMAX_API_URL`
-  - your real endpoint
-- `MINIMAX_MODEL`
-  - main text-summary model
-- `MINIMAX_VISION_MODEL`
-  - current visual-analysis model path used by the app
-- `WEBAPP_HOST`
-  - local server host
-- `WEBAPP_PORT`
-  - local server port
-- `WEBAPP_DB_PATH`
-  - SQLite database file for website chats
 
 ## 11. Optional: Configure YouTube Support
 
@@ -350,16 +403,27 @@ Recommended:
 - restrict the key to `YouTube Data API v3`
 - add IP restrictions if appropriate
 
-## 12. Optional: Configure Deepgram
+## 12. Optional: Configure Cloud Audio Transcription
 
-If you want optional longer-file transcription through Deepgram:
+If you want cloud transcription instead of (or in addition to) local Whisper:
+
+For OpenAI Whisper API:
 
 ```env
-DEEPGRAM_API_KEY=your_real_deepgram_key
-DEEPGRAM_MODEL=nova-3
+AUDIO_AI_MODEL=whisper-1
+AUDIO_AI_API_KEY=sk-proj-your_openai_key
 ```
 
-If you want everything local, leave `DEEPGRAM_API_KEY` empty.
+For Deepgram:
+
+```env
+AUDIO_AI_MODEL=deepgram/nova-3
+AUDIO_AI_API_KEY=your_deepgram_key
+```
+
+If your audio model uses the **same provider** as your text model (e.g. both OpenAI), you can leave `AUDIO_AI_API_KEY` blank — it automatically reuses `TEXT_AI_API_KEY`.
+
+If you want everything local, leave `AUDIO_AI_MODEL` empty.
 
 ## 13. Configure Local Whisper
 
@@ -373,7 +437,7 @@ LOCAL_TRANSCRIBE_MAX_MINUTES=15
 Meaning:
 
 - shorter files stay local with Whisper
-- longer files can switch to Deepgram if Deepgram is configured
+- longer files can switch to cloud transcription if configured
 
 ## 14. Configure Visual Analysis
 
@@ -381,13 +445,12 @@ Recommended:
 
 ```env
 ENABLE_LOCAL_VISION=true
-MINIMAX_VISION_MODEL=MiniMax-Text-01
 ```
 
 Current visual setup:
 
-- MiniMax for image descriptions
-- MiniMax for video key-frame descriptions
+- your configured AI model handles image descriptions
+- your configured AI model handles video key-frame descriptions
 
 The older BLIP path is no longer the normal active image-description workflow.
 
@@ -512,10 +575,9 @@ Before sharing this project publicly, do **not** expose:
 
 Check:
 
-- MiniMax key
-- MiniMax URL
-- MiniMax model names
-- whether the API endpoint is actually reachable
+- `TEXT_AI_MODEL` is set
+- `TEXT_AI_API_KEY` is set and valid for that provider
+- the API endpoint is actually reachable
 
 ### Audio transcription fails with NumPy / torch issues
 
@@ -546,3 +608,5 @@ That does not necessarily mean the whole music system is broken. MIRFLEX is opti
 ## 20. Final Note
 
 This project is meant to keep improving. If you find bugs, weird edge cases, better design ideas, stronger extraction methods, or safer ways to structure the system, that is exactly the kind of feedback this repo is meant to invite.
+
+For a complete reference of every environment variable, see [ENVREADME.md](../ENVREADME.md).

@@ -35,7 +35,7 @@ You can also pass any LiteLLM-compatible model string directly (e.g. `anthropic/
 
 **Example:**
 ```
-TEXT_AI_MODEL=gpt-4o
+TEXT_AI_MODEL=claude-sonnet-4-6
 ```
 
 ---
@@ -91,6 +91,32 @@ Only set this if your audio provider is **different** from your text provider (e
 ```
 AUDIO_AI_API_KEY=your_deepgram_key_here
 ```
+
+---
+
+## Provider-Specific API Keys
+
+These are **automatically set** from `TEXT_AI_API_KEY` based on your model choice. You normally do **not** need to set them manually. They are listed here for completeness and for advanced use cases (e.g. using multiple providers simultaneously).
+
+### `OPENAI_API_KEY` (auto-set)
+
+Auto-set when `TEXT_AI_MODEL` is an OpenAI model (e.g. `gpt-4o`). Get a key from [OpenAI](https://platform.openai.com/api-keys).
+
+### `ANTHROPIC_API_KEY` (auto-set)
+
+Auto-set when `TEXT_AI_MODEL` is an Anthropic model (e.g. `claude-sonnet-4-6`). Get a key from [Anthropic](https://console.anthropic.com/).
+
+### `GEMINI_API_KEY` (auto-set)
+
+Auto-set when `TEXT_AI_MODEL` is a Google Gemini model (e.g. `gemini-3-flash`). Get a key from [Google AI Studio](https://aistudio.google.com/apikey).
+
+### `TOGETHER_AI_API_KEY` (auto-set)
+
+Auto-set when `TEXT_AI_MODEL` is a Llama/Together AI model (e.g. `llama-4-scout`). Get a key from [Together AI](https://api.together.xyz/).
+
+### `DEEPGRAM_API_KEY` (auto-set)
+
+Auto-set when `AUDIO_AI_MODEL` is a Deepgram model (e.g. `deepgram/nova-3`). Get a key from [Deepgram](https://console.deepgram.com/).
 
 ---
 

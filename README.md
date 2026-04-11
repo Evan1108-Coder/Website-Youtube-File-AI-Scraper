@@ -1,8 +1,35 @@
-# AI Website Scraper + Summarizer V1.0 - MiniMax
+# AI Website Scraper + Summarizer V1.0 - LiteLLM
 
 This project is centered around a local website interface: a dark multi-chat workspace where you can talk to the AI normally, upload files, paste links, and review results in a persistent chat history.
 
+It supports multiple AI providers through [LiteLLM](https://docs.litellm.ai/), including OpenAI, Anthropic, Google Gemini, Together AI (Llama), and MiniMax.
+
 People are very welcome to improve this project, remix it, fork it, stress-test it, and point out weak spots. If you find better libraries, cleaner architecture, safer workflows, stronger prompts, better UI ideas, or broken edge cases, I genuinely want that feedback.
+
+## Supported AI Models
+
+Set `TEXT_AI_MODEL` in your `.env` to any of these:
+
+| Model | Provider |
+|---|---|
+| `gpt-5.4-pro` | OpenAI |
+| `gpt-5.4-mini` | OpenAI |
+| `gpt-4o` | OpenAI |
+| `gpt-4o-mini` | OpenAI |
+| `claude-opus-4-6` | Anthropic |
+| `claude-sonnet-4-6` | Anthropic |
+| `claude-haiku-4-5` | Anthropic |
+| `claude-3.5-sonnet` | Anthropic |
+| `gemini-3.1-pro` | Google |
+| `gemini-3-flash` | Google |
+| `gemini-2.5-flash-lite` | Google |
+| `llama-4-maverick` | Together AI |
+| `llama-4-scout` | Together AI |
+| `llama-3.3-70b` | Together AI |
+| `minimax-m2.7` | MiniMax |
+| `minimax-m2.5-lightning` | MiniMax |
+
+You can also pass any [LiteLLM-compatible model string](https://docs.litellm.ai/docs/providers) directly.
 
 ## What This Website Can Do
 
@@ -17,7 +44,7 @@ People are very welcome to improve this project, remix it, fork it, stress-test 
 - analyze audio files
 - analyze video files
 
-The website is designed to feel like a normal AI chat screen, but with the project’s existing multimodal extraction pipeline behind it.
+The website is designed to feel like a normal AI chat screen, but with the project's existing multimodal extraction pipeline behind it.
 
 ## Current Website Features
 
@@ -83,12 +110,12 @@ That means the app can still give something useful even if direct YouTube access
 
 ### Images and Video Frames
 
-The active visual-description path now uses `MiniMax`.
+The active visual-description path uses your configured AI model.
 
 That means:
 
-- image descriptions come from MiniMax
-- video key-frame descriptions come from MiniMax
+- image descriptions come from your AI model
+- video key-frame descriptions come from your AI model
 - the older BLIP caption path is no longer the normal active description flow
 
 ### Audio and Video
@@ -150,7 +177,7 @@ Most important files for the website version:
   - `src/ai_scraper_bot/config.py`
 - shared prompts:
   - `src/ai_scraper_bot/prompts.py`
-- summarizer / MiniMax integration:
+- summarizer / LiteLLM integration:
   - `src/ai_scraper_bot/services/summarizer.py`
 - YouTube extraction:
   - `src/ai_scraper_bot/services/youtube.py`
@@ -182,14 +209,14 @@ At a high level:
 4. install `requirements.txt`
 5. install Playwright Chromium
 6. create `.env` from `.env.example`
-7. fill in your MiniMax settings
-8. optionally add YouTube Data API, Deepgram, AcoustID, and MIRFLEX settings
+7. fill in `TEXT_AI_MODEL` and `TEXT_AI_API_KEY` with your chosen AI provider
+8. optionally add audio transcription, YouTube Data API, AcoustID, and MIRFLEX settings
 9. run the website
 
 ## Start the Website
 
 ```bash
-cd "/path/to/AI Website Scraper + Summarizer V1.0 - MiniMax"
+cd "/path/to/project"
 source .venv/bin/activate
 PYTHONPATH=src python -m ai_scraper_bot.webapp
 ```
@@ -271,3 +298,5 @@ The current code treats MIRFLEX as an optional repo hook. The rest of the music 
 ## Full Setup
 
 For the exact detailed installation and configuration flow, read [docs/SETUP.md](docs/SETUP.md).
+
+For a complete reference of every environment variable, see [ENVREADME.md](ENVREADME.md).
