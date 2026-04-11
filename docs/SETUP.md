@@ -17,13 +17,20 @@ This project is a Discord bot that can summarize:
 - audio files
 - video files
 
-It can use:
+It uses [LiteLLM](https://docs.litellm.ai/) to support multiple AI providers. You can choose any of the following:
 
-- MiniMax for final summarization
+- **OpenAI** (GPT-5.4, GPT-4o, etc.)
+- **Anthropic** (Claude Opus, Sonnet, Haiku)
+- **Google Gemini** (Gemini 3.1 Pro, 3 Flash, etc.)
+- **Together AI** (Llama 4, Llama 3.3, etc.)
+- **MiniMax** (M2.7, M2.5 Lightning)
+
+It also uses:
+
 - Whisper for local transcription
-- Deepgram for long-file transcription if configured
+- Optional cloud transcription (OpenAI Whisper API or Deepgram)
 - Tesseract for OCR
-- MiniMax-based visual understanding for images and video frames
+- AI-powered visual understanding for images and video frames
 - Playwright for transcript-site fallbacks
 - Essentia for local music features
 - optional AcoustID for song identification
@@ -39,11 +46,11 @@ You should have:
 - internet access
 - permission to install packages with Homebrew and `pip`
 - a Discord account
-- a MiniMax key and endpoint if you want the bot to actually summarize content
+- an API key from your chosen AI provider (OpenAI, Anthropic, Google, Together AI, or MiniMax)
 
 Optional but useful:
 
-- a Deepgram key for long media
+- a cloud transcription API key (OpenAI or Deepgram) for long audio
 - a YouTube Data API key for better YouTube metadata
 - an AcoustID API key if you want song ID
 
@@ -186,7 +193,7 @@ brew install rust
 In Terminal:
 
 ```bash
-cd "/path/to/AI Website Scraper + Summarizer V1.0 - MiniMax"
+cd "/path/to/project"
 ```
 
 Replace the path with your real local path.
@@ -310,24 +317,44 @@ Important:
 At minimum, these are the most important values:
 
 ```env
-DISCORD_BOT_TOKEN=
-MINIMAX_API_KEY=
-MINIMAX_API_URL=
-MINIMAX_MODEL=M2.5
+DISCORD_BOT_TOKEN=your_discord_bot_token
+TEXT_AI_MODEL=your_chosen_model
+TEXT_AI_API_KEY=your_api_key
 ```
 
 ### What Each Means
 
 - `DISCORD_BOT_TOKEN`
   - your Discord bot token
-- `MINIMAX_API_KEY`
-  - your MiniMax API key
-- `MINIMAX_API_URL`
-  - the chat-completions-style endpoint you are using
-- `MINIMAX_MODEL`
-  - the model name for summarization
+- `TEXT_AI_MODEL`
+  - which AI model to use (e.g. `gpt-4o`, `claude-sonnet-4-6`, `gemini-3-flash`, `llama-4-scout`, `minimax-m2.7`)
+- `TEXT_AI_API_KEY`
+  - the API key from your chosen model's provider
 
 If these are not set, the bot cannot run properly.
+
+### Supported Models
+
+| Model | Provider | Where to get a key |
+|---|---|---|
+| `gpt-5.4-pro` | OpenAI | https://platform.openai.com/api-keys |
+| `gpt-5.4-mini` | OpenAI | https://platform.openai.com/api-keys |
+| `gpt-4o` | OpenAI | https://platform.openai.com/api-keys |
+| `gpt-4o-mini` | OpenAI | https://platform.openai.com/api-keys |
+| `claude-opus-4-6` | Anthropic | https://console.anthropic.com/ |
+| `claude-sonnet-4-6` | Anthropic | https://console.anthropic.com/ |
+| `claude-haiku-4-5` | Anthropic | https://console.anthropic.com/ |
+| `claude-3.5-sonnet` | Anthropic | https://console.anthropic.com/ |
+| `gemini-3.1-pro` | Google | https://aistudio.google.com/apikey |
+| `gemini-3-flash` | Google | https://aistudio.google.com/apikey |
+| `gemini-2.5-flash-lite` | Google | https://aistudio.google.com/apikey |
+| `llama-4-maverick` | Together AI | https://api.together.xyz/ |
+| `llama-4-scout` | Together AI | https://api.together.xyz/ |
+| `llama-3.3-70b` | Together AI | https://api.together.xyz/ |
+| `minimax-m2.7` | MiniMax | MiniMax dashboard |
+| `minimax-m2.5-lightning` | MiniMax | MiniMax dashboard |
+
+The system auto-detects which provider you are using based on the model name and sets the correct API key environment variable for LiteLLM.
 
 ---
 
@@ -367,43 +394,78 @@ DISCORD_BOT_TOKEN=your_real_discord_bot_token
 
 ---
 
-## 12. Set Up MiniMax
+## 12. Set Up Your AI Model
 
-This project expects a chat-completions-style HTTP endpoint for summarization.
+This branch uses LiteLLM to route AI requests to your chosen provider.
 
 In `.env`, fill:
 
 ```env
-SUMMARIZER_PROVIDER=minimax_http
-MINIMAX_API_KEY=your_real_minimax_key
-MINIMAX_API_URL=https://your_real_minimax_chat_endpoint
-MINIMAX_MODEL=your_real_model_name
+TEXT_AI_MODEL=gpt-4o
+TEXT_AI_API_KEY=sk-proj-your_real_openai_key
 ```
 
-If MiniMax is not configured correctly, the bot can start but it will fail when trying to generate real summaries.
+Or for Anthropic:
+
+```env
+TEXT_AI_MODEL=claude-sonnet-4-6
+TEXT_AI_API_KEY=sk-ant-your_real_anthropic_key
+```
+
+Or for Google Gemini:
+
+```env
+TEXT_AI_MODEL=gemini-3-flash
+TEXT_AI_API_KEY=your_real_gemini_key
+```
+
+The system will auto-detect the provider and set the correct LiteLLM environment variable. You only need `TEXT_AI_MODEL` and `TEXT_AI_API_KEY`.
+
+### MiniMax Special Case
+
+If you use a MiniMax model, you also need to set `MINIMAX_API_URL`:
+
+```env
+TEXT_AI_MODEL=minimax-m2.7
+TEXT_AI_API_KEY=your_real_minimax_key
+MINIMAX_API_URL=https://your_real_minimax_chat_endpoint
+```
+
+### Legacy MiniMax Variables
+
+If you are migrating from the original MiniMax-only version, your old variables (`MINIMAX_API_KEY`, `MINIMAX_MODEL`, etc.) still work as a fallback. But it is recommended to switch to the new `TEXT_AI_MODEL` + `TEXT_AI_API_KEY` format.
 
 ---
 
-## 13. Optional: Set Up Deepgram
+## 13. Optional: Set Up Cloud Audio Transcription
 
-Deepgram is optional.
+Cloud audio transcription is optional.
 
-It is only used when:
+It is only needed when:
 
-- media is longer than the local transcription threshold
-- and `DEEPGRAM_API_KEY` is present
+- local Whisper is too slow or inaccurate
+- media files are longer than the local transcription threshold
 
-Put this in `.env` if you want it:
+In `.env`:
 
 ```env
-DEEPGRAM_API_KEY=your_real_deepgram_key
-DEEPGRAM_MODEL=nova-3
+AUDIO_AI_MODEL=whisper-1
+AUDIO_AI_API_KEY=sk-proj-your_openai_key
 ```
+
+Or for Deepgram:
+
+```env
+AUDIO_AI_MODEL=deepgram/nova-3
+AUDIO_AI_API_KEY=your_deepgram_key
+```
+
+If your audio model uses the **same provider** as your text model (e.g. both OpenAI), you can leave `AUDIO_AI_API_KEY` blank — it automatically reuses `TEXT_AI_API_KEY`.
 
 If you want everything local:
 
-- leave `DEEPGRAM_API_KEY` empty
-- local Whisper will handle media instead
+- leave `AUDIO_AI_MODEL` empty
+- local Whisper will handle all media
 
 ---
 
@@ -419,7 +481,7 @@ LOCAL_TRANSCRIBE_MAX_MINUTES=15
 What this means:
 
 - short or medium local files use Whisper locally
-- if a file is longer than `LOCAL_TRANSCRIBE_MAX_MINUTES`, the bot can switch to Deepgram if Deepgram is configured
+- if a file is longer than `LOCAL_TRANSCRIBE_MAX_MINUTES`, the bot can switch to cloud transcription if configured
 
 If your machine gets hot or slow:
 
@@ -529,25 +591,6 @@ YOUTUBE_RESULT_CACHE_MINUTES=180
 YOUTUBE_TRANSCRIPT_WINDOW_SECONDS=150
 ```
 
-### What These Mean
-
-- `YOUTUBE_COOKIE_MODE_ENABLED`
-  - explicit opt-in for cookies
-- `YOUTUBE_TRANSCRIPT_API_TIMEOUT_SECONDS`
-  - short timeout for `youtube-transcript-api`
-- `YOUTUBE_YTDLP_TIMEOUT_SECONDS`
-  - short timeout for `yt-dlp`
-- `YOUTUBE_DOWNSUB_ENABLED`
-  - enable DownSub fallback
-- `YOUTUBE_SAVESUBS_ENABLED`
-  - enable SaveSubs fallback
-- `YOUTUBE_TRANSCRIPT_SITE_HEADLESS`
-  - keep transcript-site browsers invisible
-- `YOUTUBE_SLEEP_INTERVAL_SECONDS` and `YOUTUBE_MAX_SLEEP_INTERVAL_SECONDS`
-  - gentler pacing around YouTube attempts
-- cooldown settings
-  - protect the bot from hammering blocked YouTube paths
-
 ### Recommended Safe Default
 
 Leave cookie mode off unless you deliberately want to enable it later.
@@ -556,10 +599,7 @@ Leave cookie mode off unless you deliberately want to enable it later.
 
 ## 17. Set Up Visual Analysis
 
-The current active visual architecture is:
-
-- `MiniMax` for image descriptions
-- `MiniMax` for video key-frame descriptions
+The current active visual architecture uses your configured AI model for image and video-frame descriptions.
 
 The main switch is:
 
@@ -572,7 +612,7 @@ What this means now:
 - image uploads can be visually described
 - website images can be visually described
 - video frame review can generate visual descriptions
-- the active description engine is `MiniMax`
+- the active description engine is your configured `TEXT_AI_MODEL`
 
 Important:
 
@@ -864,7 +904,7 @@ Lower:
 LOCAL_TRANSCRIBE_MAX_MINUTES=15
 ```
 
-or configure Deepgram.
+or configure cloud audio transcription (see step 13).
 
 ---
 
@@ -908,11 +948,12 @@ Before running the bot, confirm:
 - `playwright install chromium` succeeded
 - `.env` exists
 - Discord token is filled in
-- MiniMax key and URL are filled in
+- `TEXT_AI_MODEL` is set to your chosen model
+- `TEXT_AI_API_KEY` is set to your provider's API key
 
 Optional checklist:
 
-- Deepgram key added
+- `AUDIO_AI_MODEL` and `AUDIO_AI_API_KEY` for cloud transcription
 - YouTube Data API key added
 - `fpcalc` installed
 - AcoustID key added
@@ -927,13 +968,25 @@ Here is the current reference block:
 ```env
 DISCORD_BOT_TOKEN=
 
-SUMMARIZER_PROVIDER=minimax_http
+TEXT_AI_MODEL=
+TEXT_AI_API_KEY=
+
+AUDIO_AI_MODEL=
+AUDIO_AI_API_KEY=
+
+OPENAI_API_KEY=
+ANTHROPIC_API_KEY=
+GEMINI_API_KEY=
+TOGETHER_AI_API_KEY=
+DEEPGRAM_API_KEY=
+
+MUSIC_ACOUSTID_API_KEY=
+YOUTUBE_DATA_API_KEY=
+
 MINIMAX_API_KEY=
 MINIMAX_API_URL=
-MINIMAX_MODEL=M2.5
-
-DEEPGRAM_API_KEY=
-DEEPGRAM_MODEL=nova-3
+MINIMAX_MODEL=
+MINIMAX_VISION_MODEL=
 
 WHISPER_MODEL=base
 LOCAL_TRANSCRIBE_MAX_MINUTES=15
@@ -953,7 +1006,6 @@ VISION_OBJECT_MODEL=facebook/detr-resnet-50
 ENABLE_MUSIC_DETECTION=true
 MUSIC_ANALYSIS_SAMPLE_SECONDS=90
 MUSIC_ACOUSTID_ENABLED=false
-MUSIC_ACOUSTID_API_KEY=
 MUSIC_ACOUSTID_TIMEOUT_SECONDS=20
 MUSIC_FPCALC_BINARY=fpcalc
 MUSIC_ESSENTIA_ENABLED=true
@@ -965,7 +1017,6 @@ YOUTUBE_COOKIES_FROM_BROWSER=
 YOUTUBE_COOKIES_BROWSER_PROFILE=
 YOUTUBE_COOKIES_FILE=
 YOUTUBE_REQUIRE_BROWSER_PROFILE_FOR_COOKIES=true
-YOUTUBE_DATA_API_KEY=
 YOUTUBE_TRANSCRIPT_API_TIMEOUT_SECONDS=5
 YOUTUBE_YTDLP_TIMEOUT_SECONDS=10
 YOUTUBE_DOWNSUB_ENABLED=true
@@ -987,11 +1038,7 @@ VIDEO_SCAN_BASE_INTERVAL_SECONDS=3
 VIDEO_SCAN_MAX_INTERVAL_SECONDS=25
 ```
 
-Notes about the visual lines above:
-
-- `ENABLE_LOCAL_VISION=true` is still the real switch for visual analysis
-- `VISION_CAPTION_MODEL` and `VISION_OBJECT_MODEL` are legacy compatibility settings
-- the active normal image/video description path now uses `MiniMax`
+For a complete reference of every environment variable, see [ENVREADME.md](../ENVREADME.md).
 
 ---
 
@@ -1000,7 +1047,7 @@ Notes about the visual lines above:
 When everything is ready:
 
 ```bash
-cd "/path/to/AI Website Scraper + Summarizer V1.0 - MiniMax"
+cd "/path/to/project"
 source .venv/bin/activate
 PYTHONPATH=src python -m ai_scraper_bot.main
 ```

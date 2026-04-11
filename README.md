@@ -1,4 +1,4 @@
-# AI Website Scraper + Summarizer V1.0 - MiniMax
+# AI Website Scraper + Summarizer V1.0 - LiteLLM
 
 This project is a Discord bot that can analyze and summarize:
 
@@ -9,9 +9,36 @@ This project is a Discord bot that can analyze and summarize:
 - audio files
 - video files
 
+It supports multiple AI providers through [LiteLLM](https://docs.litellm.ai/), including OpenAI, Anthropic, Google Gemini, Together AI (Llama), and MiniMax.
+
 I want this project to keep improving over time, so people are very welcome to explore it, remix it, fork it, and suggest better ideas. If you find weak spots, better libraries, cleaner architecture, or safer workflows, I genuinely want to hear those improvements.
 
 It is built around a layered extraction approach. Instead of depending on only one method, it tries the safest available path for each source type, keeps moving through fallbacks when possible, and now carries runtime notes into the final answer so the bot is less likely to guess or misrepresent what really happened.
+
+## Supported AI Models
+
+Set `TEXT_AI_MODEL` in your `.env` to any of these:
+
+| Model | Provider |
+|---|---|
+| `gpt-5.4-pro` | OpenAI |
+| `gpt-5.4-mini` | OpenAI |
+| `gpt-4o` | OpenAI |
+| `gpt-4o-mini` | OpenAI |
+| `claude-opus-4-6` | Anthropic |
+| `claude-sonnet-4-6` | Anthropic |
+| `claude-haiku-4-5` | Anthropic |
+| `claude-3.5-sonnet` | Anthropic |
+| `gemini-3.1-pro` | Google |
+| `gemini-3-flash` | Google |
+| `gemini-2.5-flash-lite` | Google |
+| `llama-4-maverick` | Together AI |
+| `llama-4-scout` | Together AI |
+| `llama-3.3-70b` | Together AI |
+| `minimax-m2.7` | MiniMax |
+| `minimax-m2.5-lightning` | MiniMax |
+
+You can also pass any [LiteLLM-compatible model string](https://docs.litellm.ai/docs/providers) directly.
 
 ## What It Can Do
 
@@ -54,7 +81,7 @@ Supported types:
 ### Images
 
 - OCR with `Tesseract`
-- MiniMax-based visual analysis
+- AI-based visual analysis (using your configured `TEXT_AI_MODEL`)
 - AVIF support through:
   - Pillow AVIF support when available
   - `ffmpeg` fallback decoding when needed
@@ -62,7 +89,7 @@ Supported types:
 ### Audio and Video
 
 - local Whisper transcription
-- optional Deepgram for longer files
+- optional cloud transcription (OpenAI Whisper API, Deepgram)
 - adaptive video frame review for local videos
 - optional music-aware analysis for local audio, local video, and directly downloadable website videos
 
@@ -98,11 +125,15 @@ That helps reduce false claims like saying a fallback succeeded when it did not.
 
 ## Key Design Choices
 
-### 1. Transcript-site fallbacks for YouTube
+### 1. Multi-provider AI through LiteLLM
+
+Instead of being locked to a single AI provider, this branch uses [LiteLLM](https://docs.litellm.ai/) to route requests to any supported provider. You just set `TEXT_AI_MODEL` and `TEXT_AI_API_KEY` in your `.env` and the system auto-detects the provider.
+
+### 2. Transcript-site fallbacks for YouTube
 
 Instead of stopping at `yt-dlp` failures, the bot now keeps going through transcript-site fallbacks before giving up.
 
-### 2. Metadata fallback instead of dead-end errors
+### 3. Metadata fallback instead of dead-end errors
 
 If a YouTube transcript still cannot be recovered, the bot can still return:
 
@@ -112,7 +143,7 @@ If a YouTube transcript still cannot be recovered, the bot can still return:
 - duration
 - description
 
-### 3. Audio/video/music are separated
+### 4. Audio/video/music are separated
 
 For media files, the bot can treat these as separate evidence streams:
 
@@ -122,18 +153,18 @@ For media files, the bot can treat these as separate evidence streams:
 
 That means a silent video can still be reviewed visually, and a music-heavy audio file can still use the music pipeline even if speech transcription is weak.
 
-### 4. Runtime-diary-aware answers
+### 5. Runtime-diary-aware answers
 
 The bot can use recent runtime diary lines from the running app process so it has better grounding when explaining failures.
 
-### 5. MiniMax-only visual descriptions
+### 6. AI-powered visual descriptions
 
-The active image and video-frame description path now uses `MiniMax` as the visual description engine.
+The active image and video-frame description path uses your configured AI model as the visual description engine.
 
 That means:
 
-- image descriptions come from MiniMax
-- video key-frame descriptions come from MiniMax
+- image descriptions come from your AI model
+- video key-frame descriptions come from your AI model
 - the older BLIP captioning path is no longer part of the normal visual description flow
 
 This was changed to reduce inaccurate or noisy local captions.
@@ -148,7 +179,7 @@ If you want to inspect the code, these are the most important files:
   - `src/ai_scraper_bot/config.py`
 - prompts:
   - `src/ai_scraper_bot/prompts.py`
-- summarizer / MiniMax HTTP integration:
+- summarizer / LiteLLM integration:
   - `src/ai_scraper_bot/services/summarizer.py`
 - YouTube extraction:
   - `src/ai_scraper_bot/services/youtube.py`
@@ -182,16 +213,17 @@ At a high level, setup looks like this:
 6. install Playwright Chromium
 7. optionally install `chromaprint` for AcoustID
 8. create `.env` from `.env.example`
-9. fill in Discord + MiniMax settings
-10. optionally add YouTube Data API, Deepgram, AcoustID, and MIRFLEX settings
-11. run the bot
+9. fill in `TEXT_AI_MODEL` and `TEXT_AI_API_KEY` with your chosen AI provider
+10. fill in Discord bot token
+11. optionally add YouTube Data API, audio transcription, AcoustID, and MIRFLEX settings
+12. run the bot
 
 ## Starting the Bot
 
 Once setup is complete:
 
 ```bash
-cd "/path/to/AI Website Scraper + Summarizer V1.0 - MiniMax"
+cd "/path/to/project"
 source .venv/bin/activate
 PYTHONPATH=src python -m ai_scraper_bot.main
 ```
@@ -203,16 +235,18 @@ If the bot starts correctly, you should see a login message and a ready message 
 The current `.env.example` includes support for:
 
 - Discord token
-- MiniMax endpoint and model
-- Deepgram
-- local Whisper
-- MiniMax visual analysis
-- local music detection
+- AI model and API key (any LiteLLM-supported provider)
+- Provider-specific API key overrides
+- Cloud audio transcription (OpenAI Whisper, Deepgram)
+- Local Whisper
+- AI-powered visual analysis
+- Local music detection
 - AcoustID
 - MIRFLEX repo hook
 - YouTube Data API
 - YouTube pacing / cooldown / cache settings
-- adaptive local video scan settings
+- Adaptive local video scan settings
+- Legacy MiniMax backward compatibility
 
 ## Recommended Defaults
 
@@ -231,7 +265,7 @@ If you want the safest basic setup:
 For the current visual architecture, keep in mind:
 
 - `ENABLE_LOCAL_VISION=true` means visual review is enabled
-- the active visual description engine is `MiniMax`
+- the active visual description engine is your configured AI model
 - older env values like `VISION_CAPTION_MODEL` and `VISION_OBJECT_MODEL` may still exist in config for compatibility, but they are not the main active image-description path anymore
 
 ## Privacy and Sharing Notes
@@ -280,3 +314,5 @@ The current code treats MIRFLEX as an optional repo hook. That means:
 ## If You Want the Full Exact Setup
 
 Read [docs/SETUP.md](docs/SETUP.md). That guide is meant to be the detailed, step-by-step version.
+
+For a complete reference of every environment variable, see [ENVREADME.md](ENVREADME.md).
