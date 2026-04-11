@@ -37,9 +37,9 @@ def main() -> None:
     settings = load_settings()
     if not settings.discord_bot_token:
         raise RuntimeError("DISCORD_BOT_TOKEN is missing from .env")
-    if not settings.minimax_api_key or not settings.minimax_api_url:
+    if not settings.llm_model:
         logging.getLogger(__name__).warning(
-            "MiniMax is not fully configured yet. MINIMAX_API_KEY or MINIMAX_API_URL is missing, so chat and summaries will fail until they are set."
+            "No AI model configured. Set TEXT_AI_MODEL and TEXT_AI_API_KEY in .env (e.g. TEXT_AI_MODEL=gpt-4o)."
         )
     _check_discord_dns()
 

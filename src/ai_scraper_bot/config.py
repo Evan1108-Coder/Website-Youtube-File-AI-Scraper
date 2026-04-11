@@ -41,6 +41,14 @@ TRANSCRIPTION_MODEL_ALIASES: dict[str, str] = {
     "deepgram/whisper-large": "deepgram/whisper-large",
 }
 
+# Maps a resolved LiteLLM model prefix to the env var LiteLLM reads for that provider.
+_PROVIDER_KEY_MAP: dict[str, str] = {
+    "anthropic/": "ANTHROPIC_API_KEY",
+    "gemini/": "GEMINI_API_KEY",
+    "together_ai/": "TOGETHER_AI_API_KEY",
+    "deepgram/": "DEEPGRAM_API_KEY",
+}
+
 
 @dataclass(slots=True)
 class Settings:
@@ -49,10 +57,10 @@ class Settings:
     llm_model: str
     llm_vision_model: str
     transcription_model: str
+    text_ai_api_key: str
+    audio_ai_api_key: str
     minimax_api_key: str
     minimax_api_url: str
-    minimax_model: str
-    minimax_vision_model: str
     deepgram_api_key: str
     deepgram_model: str
     whisper_model: str
@@ -106,19 +114,43 @@ def load_settings() -> Settings:
     load_dotenv()
     downloads_dir = _resolve_downloads_dir()
 
-    minimax_model = _normalize_minimax_model(os.getenv("MINIMAX_MODEL", "MiniMax-M2.5"))
-    minimax_vision_model = _normalize_minimax_model(os.getenv("MINIMAX_VISION_MODEL", "MiniMax-Text-01"))
+    # -- Primary: new simplified env vars --
+    text_ai_model_raw = os.getenv("TEXT_AI_MODEL", "").strip()
+    text_ai_api_key = os.getenv("TEXT_AI_API_KEY", "").strip()
+    audio_ai_model_raw = os.getenv("AUDIO_AI_MODEL", "").strip()
+    audio_ai_api_key = os.getenv("AUDIO_AI_API_KEY", "").strip()
 
-    llm_model = _resolve_model(
-        os.getenv("LLM_MODEL", "").strip() or minimax_model
-    )
-    llm_vision_model = _resolve_model(
-        os.getenv("LLM_VISION_MODEL", "").strip() or minimax_vision_model
-    )
+    # -- Backward compat: fall back to legacy MINIMAX_* vars --
+    minimax_api_key = os.getenv("MINIMAX_API_KEY", "").strip()
+    minimax_api_url = os.getenv("MINIMAX_API_URL", "").strip()
 
-    transcription_model = _resolve_transcription_model(
-        os.getenv("TRANSCRIPTION_MODEL", "").strip()
-    )
+    if text_ai_model_raw:
+        llm_model = _resolve_model(text_ai_model_raw)
+        llm_vision_model = llm_model
+        if llm_model.startswith("minimax/"):
+            minimax_api_key = text_ai_api_key or minimax_api_key
+        else:
+            _inject_provider_key(llm_model, text_ai_api_key)
+    elif minimax_api_key:
+        minimax_model_name = _normalize_minimax_model(os.getenv("MINIMAX_MODEL", "MiniMax-M2.5"))
+        llm_model = _resolve_model(minimax_model_name)
+        llm_vision_model = _resolve_model(
+            _normalize_minimax_model(os.getenv("MINIMAX_VISION_MODEL", "MiniMax-Text-01"))
+        )
+    else:
+        llm_model = ""
+        llm_vision_model = ""
+
+    # Audio / transcription
+    if audio_ai_model_raw:
+        transcription_model = _resolve_transcription_model(audio_ai_model_raw)
+        effective_audio_key = audio_ai_api_key or text_ai_api_key
+        if transcription_model != "local":
+            _inject_provider_key(transcription_model, effective_audio_key)
+    else:
+        transcription_model = _resolve_transcription_model(
+            os.getenv("TRANSCRIPTION_MODEL", "").strip()
+        )
 
     return Settings(
         discord_bot_token=os.getenv("DISCORD_BOT_TOKEN", ""),
@@ -126,11 +158,11 @@ def load_settings() -> Settings:
         llm_model=llm_model,
         llm_vision_model=llm_vision_model,
         transcription_model=transcription_model,
-        minimax_api_key=os.getenv("MINIMAX_API_KEY", ""),
-        minimax_api_url=os.getenv("MINIMAX_API_URL", ""),
-        minimax_model=minimax_model,
-        minimax_vision_model=minimax_vision_model,
-        deepgram_api_key=os.getenv("DEEPGRAM_API_KEY", ""),
+        text_ai_api_key=text_ai_api_key,
+        audio_ai_api_key=audio_ai_api_key or text_ai_api_key,
+        minimax_api_key=minimax_api_key,
+        minimax_api_url=minimax_api_url,
+        deepgram_api_key=os.getenv("DEEPGRAM_API_KEY", "").strip(),
         deepgram_model=os.getenv("DEEPGRAM_MODEL", "nova-3"),
         whisper_model=os.getenv("WHISPER_MODEL", "base"),
         local_transcribe_max_minutes=int(os.getenv("LOCAL_TRANSCRIBE_MAX_MINUTES", "15")),
@@ -227,7 +259,7 @@ def _normalize_minimax_model(raw: str) -> str:
 def _resolve_model(raw: str) -> str:
     value = raw.strip()
     if not value:
-        return "minimax/MiniMax-M2.5"
+        return ""
     lowered = value.lower()
     if lowered in MODEL_ALIASES:
         return MODEL_ALIASES[lowered]
@@ -248,6 +280,19 @@ def _resolve_transcription_model(raw: str) -> str:
     if lowered in TRANSCRIPTION_MODEL_ALIASES:
         return TRANSCRIPTION_MODEL_ALIASES[lowered]
     return value
+
+
+def _inject_provider_key(resolved_model: str, api_key: str) -> None:
+    """Set the provider-specific env var so LiteLLM picks up the key automatically."""
+    if not api_key:
+        return
+    for prefix, env_var in _PROVIDER_KEY_MAP.items():
+        if resolved_model.startswith(prefix):
+            os.environ.setdefault(env_var, api_key)
+            return
+    # Default: OpenAI-compatible (no prefix means OpenAI)
+    if not resolved_model.startswith("minimax/"):
+        os.environ.setdefault("OPENAI_API_KEY", api_key)
 
 
 def _resolve_downloads_dir() -> Path:

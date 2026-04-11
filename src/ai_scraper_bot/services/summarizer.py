@@ -135,7 +135,7 @@ class LiteLLMSummarizer:
     ) -> str:
         if not self.settings.llm_model:
             raise SummarizerError(
-                "No LLM model configured. Set LLM_MODEL in .env (e.g. gpt-4o, claude-sonnet-4-6)."
+                "No AI model configured. Set TEXT_AI_MODEL and TEXT_AI_API_KEY in .env (e.g. TEXT_AI_MODEL=gpt-4o)."
             )
 
         analysis_temperature = _analysis_temperature(metadata)
@@ -195,7 +195,7 @@ class LiteLLMSummarizer:
     ) -> str:
         if not self.settings.llm_model:
             raise SummarizerError(
-                "No LLM model configured. Set LLM_MODEL in .env (e.g. gpt-4o, claude-sonnet-4-6)."
+                "No AI model configured. Set TEXT_AI_MODEL and TEXT_AI_API_KEY in .env (e.g. TEXT_AI_MODEL=gpt-4o)."
             )
 
         content = _build_multimodal_content(
@@ -344,8 +344,9 @@ Preview signals:
         }
 
         if model.startswith("minimax/"):
-            if self.settings.minimax_api_key:
-                kwargs["api_key"] = self.settings.minimax_api_key
+            api_key = self.settings.minimax_api_key or self.settings.text_ai_api_key
+            if api_key:
+                kwargs["api_key"] = api_key
             if self.settings.minimax_api_url:
                 base = self.settings.minimax_api_url
                 for suffix in ("/chat/completions", "/text/chatcompletion", "/text/chatcompletion_v2"):
