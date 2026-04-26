@@ -6,6 +6,12 @@ It supports multiple AI providers through [LiteLLM](https://docs.litellm.ai/), i
 
 People are very welcome to improve this project, remix it, fork it, stress-test it, and point out weak spots. If you find better libraries, cleaner architecture, safer workflows, stronger prompts, better UI ideas, or broken edge cases, I genuinely want that feedback.
 
+## Screenshot
+
+![AI Media Studio — Dark workspace with sidebar, chat area, and file upload](docs/images/scraper-ui.png)
+
+*The workspace UI with sidebar chat management, hero banner, chat area, and the input bar with file attachment and send button.*
+
 ## Supported AI Models
 
 Set `TEXT_AI_MODEL` in your `.env` to any of these:
