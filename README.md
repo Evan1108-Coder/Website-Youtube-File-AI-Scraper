@@ -6,11 +6,39 @@ It supports multiple AI providers through [LiteLLM](https://docs.litellm.ai/), i
 
 People are very welcome to improve this project, remix it, fork it, stress-test it, and point out weak spots. If you find better libraries, cleaner architecture, safer workflows, stronger prompts, better UI ideas, or broken edge cases, I genuinely want that feedback.
 
-## Screenshot
+## Screenshots
 
-![AI Media Studio — Dark workspace with sidebar, chat area, and file upload](docs/images/scraper-ui.png)
+### Workspace — Multi-Chat Interface with Document Analysis
 
-*The workspace UI with sidebar chat management, hero banner, chat area, and the input bar with file attachment and send button.*
+![Workspace UI — PDF analysis conversation](docs/images/scraper-ui.png)
+
+*The main workspace showing sidebar chat management, hero banner, chat area with an AI-summarized research paper, and the input bar with file attachment.*
+
+### YouTube Video Analysis
+
+![YouTube analysis — transcript extraction and summary](docs/images/youtube-analysis.png)
+
+*A YouTube link is pasted in chat and the AI extracts the transcript, summarizes key points, and answers follow-up questions.*
+
+### Website Scraping + File Comparison
+
+![Website scrape and file upload comparison](docs/images/website-file-analysis.png)
+
+*A website is scraped and summarized, then a PDF is uploaded and compared against the article — showing multi-step analysis in a single chat.*
+
+## Diagrams
+
+### System Architecture
+
+![System Architecture](docs/images/architecture.png)
+
+*Three-layer architecture: Web UI communicates with a FastAPI server that dispatches work to specialized extractors (web, YouTube, documents, vision, audio, music) and routes LLM calls through LiteLLM to five AI providers.*
+
+### Processing Pipeline
+
+![Processing Pipeline](docs/images/processing-pipeline.png)
+
+*How different input types (URLs, YouTube links, documents, images, audio, video) flow through layered extraction with fallback chains, converging into a final LiteLLM summary stored in per-chat SQLite memory.*
 
 ## Supported AI Models
 
