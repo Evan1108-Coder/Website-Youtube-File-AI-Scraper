@@ -32,6 +32,12 @@ MODEL_ALIASES: dict[str, str] = {
     # MiniMax
     "minimax-m2.7": "minimax/MiniMax-M2.7",
     "minimax-m2.5-lightning": "minimax/MiniMax-M2.5-lightning",
+    # Moonshot/Kimi
+    "kimi-latest": "moonshot/kimi-latest",
+    "kimi-k2-thinking": "moonshot/kimi-k2-thinking",
+    "kimi-k2-turbo-preview": "moonshot/kimi-k2-turbo-preview",
+    "kimi-k2.5-vision": "moonshot/kimi-k2.5-vision",
+    "moonshot-v1-128k": "moonshot/moonshot-v1-128k",
 }
 
 TRANSCRIPTION_MODEL_ALIASES: dict[str, str] = {
@@ -47,6 +53,7 @@ _PROVIDER_KEY_MAP: dict[str, str] = {
     "gemini/": "GEMINI_API_KEY",
     "together_ai/": "TOGETHER_AI_API_KEY",
     "deepgram/": "DEEPGRAM_API_KEY",
+    "moonshot/": "MOONSHOT_API_KEY",
 }
 
 
