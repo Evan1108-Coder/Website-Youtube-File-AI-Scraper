@@ -43,6 +43,11 @@ The AI model used for all text tasks: chat responses, website/YouTube summaries,
 | `llama-3.3-70b` | Together AI | Open-source Llama 3.3 |
 | `minimax-m2.7` | MiniMax | MiniMax M2.7 |
 | `minimax-m2.5-lightning` | MiniMax | MiniMax M2.5 Lightning |
+| `kimi-latest` | Moonshot | Latest Kimi model |
+| `kimi-k2-thinking` | Moonshot | Kimi K2 with reasoning |
+| `kimi-k2-turbo-preview` | Moonshot | Kimi K2 Turbo (fast) |
+| `kimi-k2.5-vision` | Moonshot | Kimi K2.5 with vision |
+| `moonshot-v1-128k` | Moonshot | Moonshot 128K context |
 
 You can also pass any LiteLLM-compatible model string directly (e.g. `anthropic/claude-sonnet-4-6`).
 
@@ -64,6 +69,7 @@ The API key for the provider of your chosen `TEXT_AI_MODEL`. The system auto-det
 | `gemini-*` → `gemini/` | `GEMINI_API_KEY` |
 | `llama-*` → `together_ai/` | `TOGETHER_AI_API_KEY` |
 | `minimax-*` → `minimax/` | Passed directly to LiteLLM (also needs `MINIMAX_API_URL`) |
+| `kimi-*` / `moonshot-*` → `moonshot/` | `MOONSHOT_API_KEY` |
 
 You only need **one** API key — the one for your chosen model's provider. The system handles the rest.
 
