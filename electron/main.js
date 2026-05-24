@@ -63,11 +63,13 @@ function startBackend() {
   }
 
   const srcDir = getResourcePath("src");
+  const downloadsDir = path.join(app.getPath("documents"), "AI Media Studio Downloads");
   const env = {
     ...process.env,
     WEBAPP_HOST: BACKEND_HOST,
     WEBAPP_PORT: String(BACKEND_PORT),
     WEBAPP_DB_PATH: path.join(app.getPath("userData"), "webapp.sqlite"),
+    DOWNLOADS_DIR: downloadsDir,
     PYTHONPATH: srcDir,
   };
 
