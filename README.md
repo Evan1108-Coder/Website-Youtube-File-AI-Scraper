@@ -201,7 +201,7 @@ If you want to inspect the code, these are the most important files:
 
 ## Installation Overview
 
-The full step-by-step guide is in [docs/SETUP.md](docs/SETUP.md).
+The full step-by-step guide is in [SETUP.md](SETUP.md).
 
 At a high level, setup looks like this:
 
@@ -313,6 +313,6 @@ The current code treats MIRFLEX as an optional repo hook. That means:
 
 ## If You Want the Full Exact Setup
 
-Read [docs/SETUP.md](docs/SETUP.md). That guide is meant to be the detailed, step-by-step version.
+Read [SETUP.md](SETUP.md). That guide is meant to be the detailed, step-by-step version.
 
 For a complete reference of every environment variable, see [ENVREADME.md](ENVREADME.md).
