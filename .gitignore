@@ -5,3 +5,11 @@ __pycache__/
 .DS_Store
 Download Audio File For AI/*
 !Download Audio File For AI/.gitkeep
+
+# Electron
+node_modules/
+dist-electron/
+electron/resources/icon.iconset/
+electron/resources/icon-original.png
+*.sqlite
+.webapp/

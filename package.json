@@ -1,0 +1,90 @@
+{
+  "name": "ai-media-studio",
+  "version": "1.0.0",
+  "description": "AI-powered media scraper, summarizer, and analyzer. Supports YouTube, websites, documents, images, audio, and video.",
+  "main": "electron/main.js",
+  "scripts": {
+    "start": "electron .",
+    "build:mac": "electron-builder --mac --arm64 --x64",
+    "build:win": "electron-builder --win --x64",
+    "build:all": "electron-builder --mac --arm64 --x64 --win --x64",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "author": "Evan Lu",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.0"
+  },
+  "dependencies": {
+    "electron-store": "^10.0.0"
+  },
+  "build": {
+    "appId": "com.evan.ai-media-studio",
+    "productName": "AI Media Studio",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "electron/**/*",
+      "src/**/*",
+      "requirements.txt",
+      ".env.example"
+    ],
+    "extraResources": [
+      {
+        "from": "src",
+        "to": "app/src",
+        "filter": ["**/*"]
+      },
+      {
+        "from": "requirements.txt",
+        "to": "app/requirements.txt"
+      },
+      {
+        "from": ".env.example",
+        "to": "app/.env.example"
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "icon": "electron/resources/icon.icns",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["arm64", "x64"]
+        }
+      ],
+      "darkModeSupport": true
+    },
+    "dmg": {
+      "title": "AI Media Studio",
+      "iconSize": 100,
+      "contents": [
+        { "x": 130, "y": 220 },
+        { "x": 410, "y": 220, "type": "link", "path": "/Applications" }
+      ]
+    },
+    "win": {
+      "icon": "electron/resources/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "electron/resources/icon.ico",
+      "uninstallerIcon": "electron/resources/icon.ico",
+      "installerHeaderIcon": "electron/resources/icon.ico"
+    },
+    "linux": {
+      "icon": "electron/resources/icon.png",
+      "target": ["AppImage"],
+      "category": "Utility"
+    }
+  }
+}
