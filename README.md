@@ -279,7 +279,7 @@ Most important files for the website version:
 
 ## Development (Run from Source)
 
-The full setup guide is in [docs/SETUP.md](docs/SETUP.md).
+The full setup guide is in [SETUP.md](SETUP.md).
 
 ```bash
 # Install dependencies
@@ -368,6 +368,6 @@ The current code treats MIRFLEX as an optional repo hook. The rest of the music 
 
 ## Full Setup
 
-For the exact detailed installation and configuration flow, read [docs/SETUP.md](docs/SETUP.md).
+For the exact detailed installation and configuration flow, read [SETUP.md](SETUP.md).
 
 For a complete reference of every environment variable, see [ENVREADME.md](ENVREADME.md).
