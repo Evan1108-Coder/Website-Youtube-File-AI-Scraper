@@ -1,10 +1,28 @@
-# AI Website Scraper + Summarizer V1.0 - LiteLLM
+# AI Media Studio — Desktop App (v1.0.0)
 
-This project is centered around a local website interface: a dark multi-chat workspace where you can talk to the AI normally, upload files, paste links, and review results in a persistent chat history.
+A native desktop app for macOS and Windows that wraps the AI Website Scraper + Summarizer in an Electron shell. Same powerful AI pipeline, but as a standalone app with drag-and-drop file support.
 
 It supports multiple AI providers through [LiteLLM](https://docs.litellm.ai/), including OpenAI, Anthropic, Google Gemini, Together AI (Llama), and MiniMax.
 
-People are very welcome to improve this project, remix it, fork it, stress-test it, and point out weak spots. If you find better libraries, cleaner architecture, safer workflows, stronger prompts, better UI ideas, or broken edge cases, I genuinely want that feedback.
+## Download
+
+Get the latest release from the [Releases page](https://github.com/Evan1108-Coder/Website-Youtube-File-AI-Scraper/releases).
+
+| Platform | File |
+|----------|------|
+| macOS (Apple Silicon — M1/M2/M3/M4) | `AI-Media-Studio-1.0.0-macOS-Apple-Silicon.dmg` |
+| macOS (Intel) | `AI-Media-Studio-1.0.0-macOS-Intel.dmg` |
+| Windows (64-bit) | `AI-Media-Studio-Setup-1.0.0-Windows-x64.exe` |
+
+## Desktop App Features
+
+Everything from the web version, plus:
+
+- **Native app** — launches from Applications/Start Menu, has its own dock icon
+- **Drag-and-drop** — drop files directly onto the window to analyze them
+- **Auto-starts backend** — no need to manually run a Python server
+- **Hidden inset titlebar** (macOS) — clean, modern appearance
+- **Persistent storage** — database and downloads stored in user-writable locations
 
 ## Screenshots
 
@@ -231,47 +249,66 @@ Most important files for the website version:
 - file parsing:
   - `src/ai_scraper_bot/parsers/file_parser.py`
 
-## Quick Start
+## Installation (Desktop App)
+
+### macOS
+
+1. Download the `.dmg` for your chip (Apple Silicon or Intel)
+2. Open the DMG and drag **AI Media Studio** to Applications
+3. On first launch, right-click the app → **Open** (to bypass Gatekeeper — the app is unsigned)
+4. The app will auto-start the Python backend
+
+### Windows
+
+1. Download the `.exe` installer
+2. Run the installer and follow the prompts
+3. Launch **AI Media Studio** from the Start Menu
+
+### Prerequisites
+
+- **Python 3.10+** installed and available in PATH
+- Python dependencies installed: `pip install -r requirements.txt`
+- System tools: `ffmpeg`, `tesseract` (for audio/OCR features)
+- Playwright Chromium: `playwright install chromium` (for website scraping)
+- `.env` file with your AI API keys (see `.env.example`)
+
+### Where the app stores data
+
+- Database: `~/Library/Application Support/ai-media-studio/webapp.sqlite` (macOS) or `%APPDATA%/ai-media-studio/webapp.sqlite` (Windows)
+- Downloads: `~/Documents/AI Media Studio Downloads/`
+
+## Development (Run from Source)
 
 The full setup guide is in [docs/SETUP.md](docs/SETUP.md).
 
-At a high level:
-
-1. install Python 3.11
-2. install system tools like `ffmpeg` and `tesseract`
-3. create and activate `.venv`
-4. install `requirements.txt`
-5. install Playwright Chromium
-6. create `.env` from `.env.example`
-7. fill in `TEXT_AI_MODEL` and `TEXT_AI_API_KEY` with your chosen AI provider
-8. optionally add audio transcription, YouTube Data API, AcoustID, and MIRFLEX settings
-9. run the website
-
-## Start the Website
-
 ```bash
-cd "/path/to/project"
-source .venv/bin/activate
+# Install dependencies
+pip install -r requirements.txt
+npm install
+
+# Run the Electron app in dev mode
+npm start
+
+# Or run just the web server
 PYTHONPATH=src python -m ai_scraper_bot.webapp
 ```
 
-Then open:
+The web server runs at `http://127.0.0.1:8000` by default (or port 18919 when launched via Electron).
 
-```text
-http://127.0.0.1:8000
+## Building Installers
+
+```bash
+# macOS (arm64 + x64)
+npm run build:mac
+
+# Windows (x64)
+npm run build:win
+
+# Both platforms
+npm run build:all
 ```
 
-Useful website env vars:
-
-- `WEBAPP_HOST`
-- `WEBAPP_PORT`
-- `WEBAPP_DB_PATH`
-
-Default local values are:
-
-- host: `127.0.0.1`
-- port: `8000`
-- database: `./.webapp/webapp.sqlite`
+Output goes to `dist-electron/`.
 
 ## Recommended Defaults
 
