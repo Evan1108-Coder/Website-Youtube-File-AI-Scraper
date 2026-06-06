@@ -1,4 +1,22 @@
-# AI Media Studio — Desktop App (v1.0.0)
+# AI Media Studio - Desktop App (v1.0.0)
+
+> Status: beta desktop/web AI workspace. The repo name still reflects the original scraper/Discord-bot roots, but the current product is AI Media Studio.
+
+AI Media Studio summarizes and compares websites, YouTube videos, documents, images, audio, and video through a local desktop/web workspace powered by a Python extraction pipeline and LiteLLM model routing.
+
+## Why Use AI Media Studio?
+
+- Handles many input types in one workspace instead of separate tools.
+- Uses extraction fallbacks so summaries can still work when one source path fails.
+- Keeps per-chat memory and uploaded context local to the app workflow.
+- Supports multiple AI providers through LiteLLM.
+
+## Current Limitations
+
+- Summaries are only as reliable as the extracted source content and selected model.
+- Some websites, videos, or files may block extraction or require fallback analysis.
+- API keys and local dependencies are required for full multimodal functionality.
+
 
 A native desktop app for macOS and Windows that wraps the AI Website Scraper + Summarizer in an Electron shell. Same powerful AI pipeline, but as a standalone app with drag-and-drop file support.
 
