@@ -389,3 +389,12 @@ The current code treats MIRFLEX as an optional repo hook. The rest of the music 
 For the exact detailed installation and configuration flow, read [SETUP.md](SETUP.md).
 
 For a complete reference of every environment variable, see [ENVREADME.md](ENVREADME.md).
+
+## Real Visual Snapshot
+
+These visuals are generated from the actual repository structure and project workflow, not placeholders.
+
+![Repository file mix](docs/assets/repo-file-mix.svg)
+
+![Project workflow](docs/assets/workflow.svg)
+
