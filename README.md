@@ -17,6 +17,28 @@ AI Media Studio summarizes and compares websites, YouTube videos, documents, ima
 - Some websites, videos, or files may block extraction or require fallback analysis.
 - API keys and local dependencies are required for full multimodal functionality.
 
+## Quick Start
+
+```bash
+git clone https://github.com/Evan1108-Coder/Website-Youtube-File-AI-Scraper.git
+cd Website-Youtube-File-AI-Scraper
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+# Edit .env with the AI provider keys you want to use
+uvicorn src.ai_scraper_bot.webapp:app --reload
+```
+
+For the packaged desktop app, use the installers on the [Releases page](https://github.com/Evan1108-Coder/Website-Youtube-File-AI-Scraper/releases).
+
+## Privacy and Data Handling
+
+- API keys belong in `.env` and should never be committed.
+- Uploaded files, scraped content, transcripts, and generated summaries may be stored locally by the app workflow.
+- Content can be sent to the configured AI provider when you ask the app to summarize or analyze it.
+- Do not upload private or sensitive files unless you understand your local setup and selected AI provider.
+- See [SECURITY.md](SECURITY.md) for vulnerability reporting and secret-handling guidance.
 
 A native desktop app for macOS and Windows that wraps the AI Website Scraper + Summarizer in an Electron shell. Same powerful AI pipeline, but as a standalone app with drag-and-drop file support.
 
@@ -397,4 +419,3 @@ These visuals are generated from the actual repository structure and project wor
 ![Repository file mix](docs/assets/repo-file-mix.svg)
 
 ![Project workflow](docs/assets/workflow.svg)
-
