@@ -104,10 +104,15 @@ Set `TEXT_AI_MODEL` in your `.env` to any of these:
 
 | Model | Provider |
 |---|---|
+| `gpt-5.5-pro` | OpenAI |
+| `gpt-5.5` | OpenAI |
+| `gpt-5.5-mini` | OpenAI |
 | `gpt-5.4-pro` | OpenAI |
 | `gpt-5.4-mini` | OpenAI |
 | `gpt-4o` | OpenAI |
 | `gpt-4o-mini` | OpenAI |
+| `claude-opus-4-7` | Anthropic |
+| `claude-sonnet-4-7` | Anthropic |
 | `claude-opus-4-6` | Anthropic |
 | `claude-sonnet-4-6` | Anthropic |
 | `claude-haiku-4-5` | Anthropic |
@@ -118,8 +123,9 @@ Set `TEXT_AI_MODEL` in your `.env` to any of these:
 | `llama-4-maverick` | Together AI |
 | `llama-4-scout` | Together AI |
 | `llama-3.3-70b` | Together AI |
+| `minimax-m3` | MiniMax |
 | `minimax-m2.7` | MiniMax |
-| `minimax-m2.5-lightning` | MiniMax |
+| `minimax-m2.5` | MiniMax |
 
 You can also pass any [LiteLLM-compatible model string](https://docs.litellm.ai/docs/providers) directly.
 

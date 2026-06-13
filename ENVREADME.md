@@ -14,12 +14,17 @@ The AI model used for all text tasks: chat responses, website/YouTube summaries,
 
 | Value | Provider | Notes |
 |---|---|---|
-| `gpt-5.4-pro` | OpenAI | Latest flagship model |
-| `gpt-5.4-mini` | OpenAI | Faster, cheaper |
+| `gpt-5.5-pro` | OpenAI | Latest flagship model |
+| `gpt-5.5` | OpenAI | Latest flagship (standard) |
+| `gpt-5.5-mini` | OpenAI | Faster, cheaper |
+| `gpt-5.4-pro` | OpenAI | Previous flagship model |
+| `gpt-5.4-mini` | OpenAI | Previous mini model |
 | `gpt-4o` | OpenAI | Strong all-rounder |
 | `gpt-4o-mini` | OpenAI | Fast and cheap |
-| `claude-opus-4-6` | Anthropic | Most capable Claude |
-| `claude-sonnet-4-6` | Anthropic | Balanced performance/cost |
+| `claude-opus-4-7` | Anthropic | Most capable Claude |
+| `claude-sonnet-4-7` | Anthropic | Balanced performance/cost |
+| `claude-opus-4-6` | Anthropic | Previous Opus |
+| `claude-sonnet-4-6` | Anthropic | Previous Sonnet |
 | `claude-haiku-4-5` | Anthropic | Fastest Claude |
 | `claude-3.5-sonnet` | Anthropic | Previous-gen Sonnet |
 | `gemini-3.1-pro` | Google | Latest Gemini Pro |
@@ -28,8 +33,9 @@ The AI model used for all text tasks: chat responses, website/YouTube summaries,
 | `llama-4-maverick` | Together AI | Open-source Llama 4 (large) |
 | `llama-4-scout` | Together AI | Open-source Llama 4 (medium) |
 | `llama-3.3-70b` | Together AI | Open-source Llama 3.3 |
+| `minimax-m3` | MiniMax | MiniMax M3 |
 | `minimax-m2.7` | MiniMax | MiniMax M2.7 |
-| `minimax-m2.5-lightning` | MiniMax | MiniMax M2.5 Lightning |
+| `minimax-m2.5` | MiniMax | MiniMax M2.5 |
 | `kimi-latest` | Moonshot | Latest Kimi model |
 | `kimi-k2-thinking` | Moonshot | Kimi K2 with reasoning |
 | `kimi-k2-turbo-preview` | Moonshot | Kimi K2 Turbo (fast) |

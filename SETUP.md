@@ -285,10 +285,15 @@ TEXT_AI_API_KEY=your_api_key
 
 | Model | Provider | Where to get a key |
 |---|---|---|
+| `gpt-5.5-pro` | OpenAI | https://platform.openai.com/api-keys |
+| `gpt-5.5` | OpenAI | https://platform.openai.com/api-keys |
+| `gpt-5.5-mini` | OpenAI | https://platform.openai.com/api-keys |
 | `gpt-5.4-pro` | OpenAI | https://platform.openai.com/api-keys |
 | `gpt-5.4-mini` | OpenAI | https://platform.openai.com/api-keys |
 | `gpt-4o` | OpenAI | https://platform.openai.com/api-keys |
 | `gpt-4o-mini` | OpenAI | https://platform.openai.com/api-keys |
+| `claude-opus-4-7` | Anthropic | https://console.anthropic.com/ |
+| `claude-sonnet-4-7` | Anthropic | https://console.anthropic.com/ |
 | `claude-opus-4-6` | Anthropic | https://console.anthropic.com/ |
 | `claude-sonnet-4-6` | Anthropic | https://console.anthropic.com/ |
 | `claude-haiku-4-5` | Anthropic | https://console.anthropic.com/ |
@@ -299,8 +304,9 @@ TEXT_AI_API_KEY=your_api_key
 | `llama-4-maverick` | Together AI | https://api.together.xyz/ |
 | `llama-4-scout` | Together AI | https://api.together.xyz/ |
 | `llama-3.3-70b` | Together AI | https://api.together.xyz/ |
+| `minimax-m3` | MiniMax | MiniMax dashboard |
 | `minimax-m2.7` | MiniMax | MiniMax dashboard |
-| `minimax-m2.5-lightning` | MiniMax | MiniMax dashboard |
+| `minimax-m2.5` | MiniMax | MiniMax dashboard |
 
 The system auto-detects which provider you are using based on the model name and sets the correct API key environment variable for LiteLLM.
 

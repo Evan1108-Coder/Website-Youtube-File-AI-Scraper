@@ -12,11 +12,16 @@ OLD_DOWNLOADS_DIR_NAME = "Download Audios For AI"
 
 MODEL_ALIASES: dict[str, str] = {
     # OpenAI
+    "gpt-5.5-pro": "gpt-5.5-pro",
+    "gpt-5.5": "gpt-5.5",
+    "gpt-5.5-mini": "gpt-5.5-mini",
     "gpt-5.4-pro": "gpt-5.4-pro",
     "gpt-5.4-mini": "gpt-5.4-mini",
     "gpt-4o": "gpt-4o",
     "gpt-4o-mini": "gpt-4o-mini",
     # Anthropic
+    "claude-opus-4-7": "anthropic/claude-opus-4-7",
+    "claude-sonnet-4-7": "anthropic/claude-sonnet-4-7",
     "claude-opus-4-6": "anthropic/claude-opus-4-6",
     "claude-sonnet-4-6": "anthropic/claude-sonnet-4-6",
     "claude-haiku-4-5": "anthropic/claude-haiku-4-5",
@@ -30,8 +35,9 @@ MODEL_ALIASES: dict[str, str] = {
     "llama-4-scout": "together_ai/meta-llama/Llama-4-Scout-17B-16E-Instruct",
     "llama-3.3-70b": "together_ai/meta-llama/Llama-3.3-70B-Instruct-Turbo",
     # MiniMax
+    "minimax-m3": "minimax/MiniMax-M3",
     "minimax-m2.7": "minimax/MiniMax-M2.7",
-    "minimax-m2.5-lightning": "minimax/MiniMax-M2.5-lightning",
+    "minimax-m2.5": "minimax/MiniMax-M2.5",
     # Moonshot/Kimi
     "kimi-latest": "moonshot/kimi-latest",
     "kimi-k2-thinking": "moonshot/kimi-k2-thinking",
